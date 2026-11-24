@@ -576,3 +576,48 @@ button {
 .time-clock input { width: 76px; padding: 12px 4px; border: 2px solid #d9dfbd; border-radius: 16px; background: #fffdf2; color: #216d60; text-align: center; font-size: 28px; font-weight: 700; }
 
 .island-time .field-hint { display: block; position: static; margin: 12px 0 0; text-align: center; line-height: 1.5; }
+
+/* Compact island notes in the monthly overview. */
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  aspect-ratio: auto;
+  min-height: clamp(92px, 12vw, 118px);
+  padding: 6px 3px;
+  gap: 4px;
+}
+.day::before { display: none; }
+.day__number {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 50%;
+}
+.day--selected .day__number { background: #f4d56c; box-shadow: 0 2px 0 #d8b74e; }
+.day__previews { display: grid; gap: 3px; width: 100%; min-width: 0; }
+.day__preview {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 3px 4px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.25;
+  font-weight: 600;
+  text-align: left;
+}
+.day__preview--philipp { background: #d8eadb; color: #356b57; }
+.day__preview--adriana { background: #f4dce3; color: #855266; }
+.day__preview--shared { background: #f4e4b2; color: #796027; }
+.day__more { font-size: 10px; line-height: 1.2; color: #69654f; }
+@media (max-width: 520px) {
+  .day { min-height: 88px; padding-inline: 2px; }
+  .day__preview { font-size: 10px; padding-inline: 2px; }
+  .day__more { font-size: 9px; }
+}
