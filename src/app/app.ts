@@ -1,6 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Calendar } from './calendar/calendar';
+import { AudioService } from './services/audio.service';
 import { SupabaseService } from './services/supabase.service';
 
 @Component({
@@ -11,6 +12,13 @@ import { SupabaseService } from './services/supabase.service';
 })
 export class App {
   readonly auth = inject(SupabaseService);
+  private readonly audio = inject(AudioService);
+
+  constructor() {
+    effect(() => {
+      this.audio.setLoginScreen(!this.auth.isInitializing() && !this.auth.session());
+    });
+  }
 
   readonly isBusy = signal(false);
   readonly errorMessage = signal('');

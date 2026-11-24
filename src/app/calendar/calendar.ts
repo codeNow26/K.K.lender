@@ -9,6 +9,7 @@ import {
 import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { AudioService } from '../services/audio.service';
 import { SupabaseService } from '../services/supabase.service';
 
 type EventOwner = 'Philipp' | 'Adriana' | 'Gemeinsam';
@@ -28,6 +29,7 @@ interface CalendarEvent {
   styleUrl: './calendar.scss',
 })
 export class Calendar implements OnInit, OnDestroy {
+  private readonly audio = inject(AudioService);
   private readonly supabase = inject(SupabaseService);
   private readonly document = inject(DOCUMENT);
   private readonly events = signal<CalendarEvent[]>([]);
@@ -70,6 +72,7 @@ export class Calendar implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.isDestroyed = true;
+    this.audio.setNewEvent(false);
 
     if (this.realtimeChannel) {
       void this.supabase.client.removeChannel(this.realtimeChannel);
@@ -215,6 +218,7 @@ export class Calendar implements OnInit, OnDestroy {
   }
 
   selectDay(day: number): void {
+    this.audio.playDayClick();
     this.selectedDate = new Date(
       this.displayedMonth.getFullYear(),
       this.displayedMonth.getMonth(),
@@ -253,6 +257,7 @@ export class Calendar implements OnInit, OnDestroy {
 
     this.clearMessages();
     this.isFormOpen = true;
+    this.audio.setNewEvent(true);
   }
 
   editEvent(event: CalendarEvent): void {
@@ -267,6 +272,7 @@ export class Calendar implements OnInit, OnDestroy {
       return;
     }
 
+    this.audio.setNewEvent(false);
     this.editingId = event.id;
     this.draftTitle = event.title;
     this.draftDate = event.date;
@@ -280,6 +286,7 @@ export class Calendar implements OnInit, OnDestroy {
   closeForm(): void {
     if (this.isBusy) return;
 
+    this.audio.setNewEvent(false);
     this.isFormOpen = false;
     this.editingId = null;
     this.saveError.set('');
@@ -350,6 +357,7 @@ export class Calendar implements OnInit, OnDestroy {
 
       this.selectedDate = date;
       this.displayedMonth = new Date(year, month - 1, 1);
+      this.audio.setNewEvent(false);
       this.isFormOpen = false;
       this.editingId = null;
 
@@ -419,6 +427,7 @@ export class Calendar implements OnInit, OnDestroy {
       );
 
       if (this.editingId === event.id) {
+        this.audio.setNewEvent(false);
         this.isFormOpen = false;
         this.editingId = null;
       }

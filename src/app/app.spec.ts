@@ -1,23 +1,27 @@
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
+import { vi } from 'vitest';
 import { App } from './app';
+import { AudioService } from './services/audio.service';
+import { SupabaseService } from './services/supabase.service';
 
 describe('App', () => {
-  beforeEach(async () => {
+  it('plays menu music only after auth initialization on the login screen', async () => {
+    const auth = { isInitializing: signal(true), session: signal(null) };
+    const audio = { setLoginScreen: vi.fn() };
     await TestBed.configureTestingModule({
       imports: [App],
+      providers: [
+        { provide: SupabaseService, useValue: auth },
+        { provide: AudioService, useValue: audio },
+      ],
     }).compileComponents();
-  });
-
-  it('should create the app', () => {
     const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
-
-  it('should render title', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, inselkalender');
+    fixture.detectChanges();
+    expect(audio.setLoginScreen).toHaveBeenLastCalledWith(false);
+    auth.isInitializing.set(false);
+    fixture.detectChanges();
+    expect(audio.setLoginScreen).toHaveBeenLastCalledWith(true);
+    expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain('K.K.Lender');
   });
 });
