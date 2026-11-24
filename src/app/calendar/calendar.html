@@ -1,0 +1,285 @@
+<p class="sync-status" role="status">{{ syncStatus() }}</p>
+
+<div class="month-navigation">
+  <button
+    type="button"
+    aria-label="Vorheriger Monat"
+    (click)="changeMonth(-1)"
+  >
+    ‹
+  </button>
+
+  <h3 aria-live="polite">{{ monthLabel }}</h3>
+
+  <button
+    type="button"
+    aria-label="Nächster Monat"
+    (click)="changeMonth(1)"
+  >
+    ›
+  </button>
+</div>
+
+<div class="month-grid">
+  @for (weekday of weekdays; track weekday) {
+    <span class="weekday">{{ weekday }}</span>
+  }
+
+  @for (day of days; track $index) {
+    @if (day !== null) {
+      <button
+        type="button"
+        class="day"
+        [class.day--today]="isToday(day)"
+        [class.day--selected]="isSelected(day)"
+        [attr.aria-current]="isToday(day) ? 'date' : null"
+        [attr.aria-pressed]="isSelected(day)"
+        [attr.aria-label]="
+          day + '. ' + monthLabel +
+          (hasEvents(day) ? ', mit Inselereignissen' : '')
+        "
+        (click)="selectDay(day)"
+      >
+        <span>{{ day }}</span>
+
+        @if (hasEvents(day)) {
+          <img
+            class="day__leaf"
+            src="images/leaf.webp"
+            alt=""
+            width="12"
+            height="12"
+          />
+        }
+      </button>
+    } @else {
+      <span class="day day--empty" aria-hidden="true"></span>
+    }
+  }
+</div>
+
+<div class="calendar-footer">
+  <button type="button" (click)="goToToday()">
+    Zurück zu heute
+  </button>
+
+  <button
+    type="button"
+    [disabled]="isLoading() || isBusy"
+    (click)="loadEvents()"
+  >
+    {{ isLoading() ? 'Lädt …' : 'Aktualisieren ↻' }}
+  </button>
+</div>
+
+@if (loadError()) {
+  <p class="feedback feedback--error" role="alert">{{ loadError() }}</p>
+}
+
+@if (actionError()) {
+  <p class="feedback feedback--error" role="alert">{{ actionError() }}</p>
+}
+
+@if (successMessage()) {
+  <p class="feedback feedback--success" role="status">
+    {{ successMessage() }}
+  </p>
+}
+
+<section class="selected-day" aria-labelledby="selected-day-title">
+  <span class="selected-day__label">Unser Tagesplan</span>
+
+  <h3 id="selected-day-title" aria-live="polite">
+    {{ selectedDateLabel }}
+  </h3>
+
+  @if (isLoading()) {
+    <p class="loading-state" role="status">Unsere Pläne werden geladen …</p>
+  } @else {
+    <div class="event-list">
+      @for (event of selectedEvents; track event.id) {
+        <article
+          class="event-card"
+          [class.event-card--philipp]="event.owner === 'Philipp'"
+          [class.event-card--adriana]="event.owner === 'Adriana'"
+          [class.event-card--shared]="event.owner === 'Gemeinsam'"
+        >
+          <div class="event-card__meta">
+            <span class="event-card__time">
+              {{ event.time ? event.time.slice(0, 5) + ' Uhr' : 'Ganztägig' }}
+            </span>
+
+            <span class="event-card__owner">{{ event.owner }}</span>
+          </div>
+
+          <h4>{{ event.title }}</h4>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="button-secondary"
+              [disabled]="isBusy"
+              [attr.aria-label]="'Inselereignis bearbeiten: ' + event.title"
+              (click)="editEvent(event)"
+            >
+              Bearbeiten
+            </button>
+
+            <button
+              type="button"
+              class="button-secondary"
+              [disabled]="isBusy"
+              [attr.aria-label]="'Inselereignis löschen: ' + event.title"
+              (click)="deleteEvent(event)"
+            >
+              {{ deletingId() === event.id ? 'Wird gelöscht …' : 'Löschen' }}
+            </button>
+          </div>
+        </article>
+      } @empty {
+        @if (!loadError()) {
+          <div class="empty-day">
+            <div class="empty-day__message">
+              <span class="empty-day__name">Melinda</span>
+              <p>Kein Unkraut im Kalender!</p>
+            </div>
+
+            <img
+              class="empty-day__character"
+              src="images/isabelle.webp"
+              alt="Melinda winkt dir zu"
+              width="140"
+              height="140"
+            />
+          </div>
+        }
+      }
+    </div>
+  }
+
+  @if (!isFormOpen) {
+    <button
+      type="button"
+      class="add-event-button"
+      [disabled]="isBusy"
+      (click)="openNewEvent()"
+    >
+      <span aria-hidden="true">＋</span> Inselereignis hinzufügen
+    </button>
+  }
+</section>
+
+@if (isFormOpen) {
+  <section class="event-form-section" aria-labelledby="event-form-title">
+    <span class="event-form-section__label">
+      {{ editingId ? 'Kleine Planänderung' : 'Ich freu mich so auf deinen Plan' }}
+    </span>
+
+    <h3 id="event-form-title">
+      {{ editingId ? 'Was wird anders?' : 'Was hast du vor?' }}
+    </h3>
+
+    <form
+      #eventForm="ngForm"
+      class="event-form"
+      [attr.aria-busy]="isSaving()"
+      (ngSubmit)="eventForm.valid && saveEvent()"
+    >
+      <div class="field">
+        <label for="event-title">Was steht an?</label>
+        <input
+          id="event-title"
+          name="title"
+          type="text"
+          placeholder="Zum Beispiel: Zusammen kochen"
+          maxlength="100"
+          required
+          [disabled]="isBusy"
+          [(ngModel)]="draftTitle"
+        />
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label for="event-date">Datum</label>
+          <input
+            id="event-date"
+            name="date"
+            type="date"
+            min="1900-01-01"
+            max="9999-12-31"
+            required
+            [disabled]="isBusy"
+            [(ngModel)]="draftDate"
+          />
+        </div>
+
+        <div class="field">
+          <label for="event-time">Uhrzeit</label>
+          <input
+            id="event-time"
+            name="time"
+            type="time"
+            aria-describedby="time-hint"
+            [disabled]="isBusy"
+            [(ngModel)]="draftTime"
+          />
+        </div>
+      </div>
+
+      <p id="time-hint" class="field-hint">
+        Ohne Uhrzeit wird das Inselereignis als ganztägig angezeigt.
+      </p>
+
+      <div class="field">
+        <label for="event-owner">Für wen?</label>
+        <select
+          id="event-owner"
+          name="owner"
+          [disabled]="isBusy"
+          [(ngModel)]="draftOwner"
+        >
+          <option value="Gemeinsam">Gemeinsam</option>
+          <option value="Philipp">Philipp</option>
+          <option value="Adriana">Adriana</option>
+        </select>
+      </div>
+
+      @if (saveError()) {
+        <p class="feedback feedback--error" role="alert">
+          {{ saveError() }}
+        </p>
+      }
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="button-secondary"
+          [disabled]="isBusy"
+          (click)="closeForm()"
+        >
+          Abbrechen
+        </button>
+
+        <button
+          type="submit"
+          class="button-primary"
+          [disabled]="
+            eventForm.invalid ||
+            !draftTitle.trim() ||
+            isBusy ||
+            isLoading()
+          "
+        >
+          {{
+            isSaving()
+              ? 'Wird gespeichert …'
+              : editingId
+                ? 'Änderungen speichern'
+                : 'Inselereignis speichern'
+          }}
+        </button>
+      </div>
+    </form>
+  </section>
+}

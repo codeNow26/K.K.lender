@@ -1,0 +1,117 @@
+<main class="planner">
+  <header class="planner__header">
+    <div class="brand">
+      <span class="brand__icon">
+        <img src="images/leaf.webp" alt="" width="36" height="36" />
+      </span>
+
+      <div>
+        <p class="brand__eyebrow">Philipp & Adriana</p>
+        <h1>Terminal Crossing</h1>
+      </div>
+    </div>
+
+    <span class="planner__badge">Unsere Inselzeit</span>
+  </header>
+
+  @if (auth.isInitializing()) {
+    <section class="status-card" role="status">
+      <img src="images/leaf.webp" alt="" width="40" height="40" />
+      <p>Unsere kleine Insel wacht auf …</p>
+    </section>
+  } @else if (auth.session()) {
+    <div class="account-bar">
+
+      <button
+        type="button"
+        class="button-secondary"
+        [disabled]="isBusy()"
+        (click)="logout()"
+      >
+        {{ isBusy() ? 'Einen Moment …' : 'Abmelden' }}
+      </button>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="error-message" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <section class="calendar" aria-labelledby="calendar-title">
+      <div class="calendar__header">
+        <h2 id="calendar-title">Inselpläne</h2>
+
+        <button
+          type="button"
+          class="button-primary"
+          (click)="calendar.openNewEvent()"
+        >
+          <span aria-hidden="true">＋</span> Inselereignis
+        </button>
+      </div>
+
+      <app-calendar #calendar />
+    </section>
+
+    <footer class="planner__footer">
+      <img src="images/leaf.webp" alt="" width="15" height="15" />
+      <span></span>
+    </footer>
+  } @else {
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="login-card__icon">
+        <img src="images/leaf.webp" alt="" width="48" height="48" />
+      </div>
+
+      <span class="section-eyebrow">Schön, dass du da bist</span>
+      <h2 id="login-title">Willkommen auf unserer Insel</h2>
+      <p class="login-card__intro">Eure nächsten Abenteuer warten schon.</p>
+
+      <form
+        #loginForm="ngForm"
+        class="login-form"
+        (ngSubmit)="loginForm.valid && login()"
+      >
+        <div class="field">
+          <label for="login-email">E-Mail</label>
+          <input
+            id="login-email"
+            name="email"
+            type="email"
+            autocomplete="username"
+            placeholder="Deine E-Mail-Adresse"
+            required
+            email
+            [disabled]="isBusy()"
+            [(ngModel)]="email"
+          />
+        </div>
+
+        <div class="field">
+          <label for="login-password">Passwort</label>
+          <input
+            id="login-password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Dein Passwort"
+            required
+            [disabled]="isBusy()"
+            [(ngModel)]="password"
+          />
+        </div>
+
+        @if (errorMessage()) {
+          <p class="error-message" role="alert">{{ errorMessage() }}</p>
+        }
+
+        <button
+          type="submit"
+          class="button-primary login-form__submit"
+          [disabled]="loginForm.invalid || isBusy()"
+        >
+          {{ isBusy() ? 'Einen Moment …' : 'Ab auf die Insel' }}
+        </button>
+      </form>
+    </section>
+  }
+</main>
