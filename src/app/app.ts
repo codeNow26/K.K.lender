@@ -27,12 +27,24 @@ export class App {
     !window.matchMedia('(display-mode: standalone)').matches
   );
   readonly installHelp = signal(false);
+  readonly installReady = signal(false);
+  private readonly isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+
+  openInChrome(): void {
+    const url = new URL(window.location.href);
+    url.searchParams.set('install', '1');
+    url.searchParams.set('chrome', '1');
+    const fallback = encodeURIComponent(url.href);
+    window.location.href = 'intent://' + url.host + url.pathname + url.search +
+      '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + fallback + ';end';
+  }
 
   @HostListener('window:beforeinstallprompt', ['$event'])
   onInstallPrompt(event: Event): void {
     if (!this.installRequested()) return;
     event.preventDefault();
     this.installPrompt = event as InstallPromptEvent;
+    this.installReady.set(true);
     this.installHelp.set(false);
   }
 
@@ -47,6 +59,7 @@ export class App {
     this.installHelp.set(false);
     const url = new URL(window.location.href);
     url.searchParams.delete('install');
+    url.searchParams.delete('chrome');
     window.history.replaceState(window.history.state, '', url);
   }
 
@@ -54,9 +67,13 @@ export class App {
     const prompt = this.installPrompt;
     if (!prompt) {
       this.installHelp.set(true);
+      if (this.isAndroid && !new URLSearchParams(window.location.search).has('chrome')) {
+        this.openInChrome();
+      }
       return;
     }
     this.installPrompt = null;
+    this.installReady.set(false);
     try {
       const result = await prompt.prompt();
       if (result.outcome === 'accepted') this.dismissInstall();
