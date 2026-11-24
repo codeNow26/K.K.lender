@@ -96,6 +96,7 @@
             email
             [disabled]="isBusy()"
             [(ngModel)]="email"
+            (input)="animalese.onInput($event, true)"
           />
         </div>
 
@@ -110,6 +111,7 @@
             required
             [disabled]="isBusy()"
             [(ngModel)]="password"
+            (input)="animalese.onInput($event, true, true)"
           />
         </div>
 
