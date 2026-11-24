@@ -251,6 +251,16 @@ export class Calendar implements OnInit, OnDestroy {
     );
   }
 
+  eventsOnDay(day: number): CalendarEvent[] {
+    const key = this.toDateKey(new Date(this.displayedMonth.getFullYear(), this.displayedMonth.getMonth(), day));
+    return this.events().filter(event => event.date === key)
+      .sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''));
+  }
+
+  eventTitlesOnDay(day: number): string {
+    return this.eventsOnDay(day).map(event => event.title).join(', ');
+  }
+
   hasEvents(day: number): boolean {
     const date = this.toDateKey(
       new Date(this.displayedMonth.getFullYear(), this.displayedMonth.getMonth(), day),
