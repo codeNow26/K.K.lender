@@ -116,7 +116,7 @@
               {{ event.time ? event.time.slice(0, 5) + ' Uhr' : 'Ganztägig' }}
             </span>
 
-            <span class="event-card__owner">{{ ownerLabels[event.owner] }}</span>
+            <span class="event-card__owner"><img [src]="ownerIcons[event.owner]" alt="" width="22" height="22">{{ ownerLabels[event.owner] }}</span>
           </div>
 
           <h4>{{ event.title }}</h4>
