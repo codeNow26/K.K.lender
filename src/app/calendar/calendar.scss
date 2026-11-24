@@ -563,8 +563,6 @@ button {
   pointer-events: none;
   img { width: min(16px, 29%); height: 16px; object-fit: contain; }
 }
-.title-field-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.animalese-toggle { min-height: 36px; padding: 6px 10px; background: #e7efdc; color: #266d60; border-radius: 20px; cursor: pointer; font-size: 11px; }
 
 .island-time { margin: 0; padding: 16px; border: 2px dashed #c3d5ad; border-radius: 22px; background: #fff9df; min-width: 0; }
 .island-time legend { padding: 0 8px; color: #277f70; font-weight: 700; }
@@ -616,8 +614,31 @@ button {
 .day__preview--adriana { background: #f4dce3; color: #855266; }
 .day__preview--shared { background: #f4e4b2; color: #796027; }
 .day__more { font-size: 10px; line-height: 1.2; color: #69654f; }
+.day__more--mobile { display: none; }
+
 @media (max-width: 520px) {
-  .day { min-height: 88px; padding-inline: 2px; }
-  .day__preview { font-size: 10px; padding-inline: 2px; }
-  .day__more { font-size: 9px; }
+  .month-grid { gap: 3px; }
+  .day { min-height: 88px; padding: 4px 1px 5px; gap: 3px; }
+  .day__number { width: 26px; height: 26px; flex-basis: 26px; font-size: 15px; }
+  .day__previews { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+  .day__preview {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
+    font-size: 10.5px;
+    line-height: 1.2;
+    padding: 3px 2px;
+    max-height: calc(2.4em + 6px);
+    text-align: center;
+  }
+  .day__preview--secondary, .day__more--desktop { display: none; }
+  .day__more--mobile { display: block; font-size: 10px; white-space: nowrap; }
+  .day__more-label { font-size: 9px; }
+}
+
+@media (max-width: 390px) {
+  .day__more-label { display: none; }
 }
