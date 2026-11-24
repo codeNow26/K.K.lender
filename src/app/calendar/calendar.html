@@ -250,19 +250,24 @@
         }
       </fieldset>
 
-      <div class="field">
-        <label for="event-owner">Für wen?</label>
-        <select
-          id="event-owner"
-          name="owner"
-          [disabled]="isBusy"
-          [(ngModel)]="draftOwner"
-        >
-          <option value="Gemeinsam">Together</option>
-          <option value="Philipp">Phjelepp</option>
-          <option value="Adriana">Adritz</option>
-        </select>
-      </div>
+      <fieldset class="owner-picker" [disabled]="isBusy">
+        <legend>Für wen?</legend>
+        <div class="owner-picker__options">
+          @for (owner of ownerChoices; track owner) {
+            <label class="owner-option"
+              [class.owner-option--shared]="owner === 'Gemeinsam'"
+              [class.owner-option--philipp]="owner === 'Philipp'"
+              [class.owner-option--adriana]="owner === 'Adriana'">
+              <input type="radio" name="owner" [value]="owner" [(ngModel)]="draftOwner" [disabled]="isBusy">
+              <span class="owner-option__card">
+                <img [src]="ownerIcons[owner]" alt="" width="28" height="28">
+                <span>{{ ownerLabels[owner] }}</span>
+                <span class="owner-option__indicator" aria-hidden="true">{{ draftOwner === owner ? '✓' : '' }}</span>
+              </span>
+            </label>
+          }
+        </div>
+      </fieldset>
 
       @if (saveError()) {
         <p class="feedback feedback--error" role="alert">
