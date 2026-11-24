@@ -1,6 +1,7 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Calendar } from './calendar/calendar';
+import { AnimaleseService } from './services/animalese.service';
 import { AudioService } from './services/audio.service';
 import { SupabaseService } from './services/supabase.service';
 
@@ -13,6 +14,7 @@ import { SupabaseService } from './services/supabase.service';
 export class App {
   readonly auth = inject(SupabaseService);
   readonly audio = inject(AudioService);
+  readonly animalese = inject(AnimaleseService);
 
   constructor() {
     effect(() => {
