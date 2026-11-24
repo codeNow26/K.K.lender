@@ -642,6 +642,11 @@ button {
     hyphens: none;
     text-overflow: ellipsis;
   }
+  .day__preview-emoticon {
+    display: inline-block;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
   .day__preview--secondary, .day__more--desktop { display: none; }
   .day__more--mobile { display: block; font-size: 10px; white-space: nowrap; }
   .day__more-label { font-size: 9px; }

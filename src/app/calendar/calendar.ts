@@ -264,6 +264,13 @@ export class Calendar implements OnInit, OnDestroy {
       .sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''));
   }
 
+  previewTitleParts(title: string): { text: string; keepTogether: boolean }[] {
+    return title.split(/(\s+)/).filter(Boolean).map((text) => ({
+      text,
+      keepTogether: /^(?:[\p{P}\p{S}]{2,8}|[><^oO0Tt;:][._-][><^oO0Tt;:]|[:;=8xX][-^']?[)(/\\DPpOo]|[xX]D|[uUoO][wW][uUoO])$/u.test(text),
+    }));
+  }
+
   eventTitlesOnDay(day: number): string {
     return this.eventsOnDay(day).map(event => event.title).join(', ');
   }
