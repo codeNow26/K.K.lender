@@ -7,8 +7,8 @@
       <button type="button" class="button-primary" (click)="installApp()">App installieren</button>
       @if (installHelp()) {
         <div class="install-help" role="status">
-          <p>Falls kein Installationsfenster erscheint: Öffne den Link in Chrome und tippe oben rechts auf ⋮.</p>
-          <p>Wähle „App installieren“, „Installieren und Verknüpfung erstellen“ oder „Zum Startbildschirm hinzufügen“.</p>
+          <p>Kein Installationsfenster? Tippe oben rechts auf ⋮ und wähle „App installieren“ oder „Zum Startbildschirm hinzufügen“.</p>
+          <button type="button" class="button-secondary" (click)="openInChrome()">In Chrome öffnen</button>
         </div>
       }
       <button type="button" class="install-later" (click)="dismissInstall()">Jetzt nicht</button>
