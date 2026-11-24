@@ -45,13 +45,17 @@
         <span class="day__previews">
           @for (event of dailyEvents.slice(0, 2); track event.id) {
             <span class="day__preview"
+              [class.day__preview--secondary]="!$first"
               [class.day__preview--philipp]="event.owner === 'Philipp'"
               [class.day__preview--adriana]="event.owner === 'Adriana'"
               [class.day__preview--shared]="event.owner === 'Gemeinsam'"
               [title]="event.title">{{ event.title }}</span>
           }
           @if (dailyEvents.length > 2) {
-            <span class="day__more">+{{ dailyEvents.length - 2 }} weitere</span>
+            <span class="day__more day__more--desktop">+{{ dailyEvents.length - 2 }} weitere</span>
+          }
+          @if (dailyEvents.length > 1) {
+            <span class="day__more day__more--mobile">+{{ dailyEvents.length - 1 }}<span class="day__more-label"> weitere</span></span>
           }
         </span>
       </button>
@@ -112,7 +116,7 @@
               {{ event.time ? event.time.slice(0, 5) + ' Uhr' : 'Ganztägig' }}
             </span>
 
-            <span class="event-card__owner">{{ event.owner }}</span>
+            <span class="event-card__owner">{{ ownerLabels[event.owner] }}</span>
           </div>
 
           <h4>{{ event.title }}</h4>
@@ -189,12 +193,7 @@
       (ngSubmit)="eventForm.valid && saveEvent()"
     >
       <div class="field">
-        <div class="title-field-heading">
-          <label for="event-title">Was steht an?</label>
-          <button type="button" class="animalese-toggle" [attr.aria-pressed]="animalese.enabled()" (click)="animalese.toggle()">
-            Animalese {{ animalese.enabled() ? 'an' : 'aus' }}
-          </button>
-        </div>
+        <label for="event-title">Was steht an?</label>
         <input
           id="event-title"
           name="title"
@@ -204,7 +203,7 @@
           required
           [disabled]="isBusy"
           [(ngModel)]="draftTitle"
-          (input)="animalese.onInput($event)"
+          (input)="animalese.onInput($event, true)"
         />
       </div>
 
@@ -259,9 +258,9 @@
           [disabled]="isBusy"
           [(ngModel)]="draftOwner"
         >
-          <option value="Gemeinsam">Gemeinsam</option>
-          <option value="Philipp">Philipp</option>
-          <option value="Adriana">Adriana</option>
+          <option value="Gemeinsam">Together</option>
+          <option value="Philipp">Phjelepp</option>
+          <option value="Adriana">Adritz</option>
         </select>
       </div>
 
