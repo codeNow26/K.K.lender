@@ -1,3 +1,20 @@
+@if (installRequested()) {
+  <section class="install-screen" aria-labelledby="install-title">
+    <div class="install-card">
+      <img class="install-icon" src="icons/android-chrome-192x192.png" alt="" width="104" height="104">
+      <h2 id="install-title">App installieren?</h2>
+      <p>Unser K.K.Lender direkt auf deinem Handy. 🌿</p>
+      <button type="button" class="button-primary" (click)="installApp()">App installieren</button>
+      @if (installHelp()) {
+        <div class="install-help" role="status">
+          <p>Falls kein Installationsfenster erscheint: Öffne den Link in Chrome und tippe oben rechts auf ⋮.</p>
+          <p>Wähle „App installieren“, „Installieren und Verknüpfung erstellen“ oder „Zum Startbildschirm hinzufügen“.</p>
+        </div>
+      }
+      <button type="button" class="install-later" (click)="dismissInstall()">Jetzt nicht</button>
+    </div>
+  </section>
+} @else {
 <main class="planner">
   <header class="planner__header">
     <div class="brand">
@@ -130,3 +147,4 @@
     </section>
   }
 </main>
+}
