@@ -22,7 +22,7 @@
         (click)="audio.toggleMusic()"
       >
         <span aria-hidden="true">{{ audio.musicEnabled() ? '♫' : '♪' }}</span>
-        <span>Musik {{ audio.musicEnabled() ? 'an' : 'aus' }}</span>
+        <span>{{ audio.musicEnabled() ? 'Musik ausschalten' : 'Musik einschalten' }}</span>
       </button>
     </div>
   </header>

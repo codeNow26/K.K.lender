@@ -441,7 +441,6 @@ button {
   }
 }
 
-.day__leaf { position: absolute; right: 3px; bottom: 3px; width: 12px; height: 12px; object-fit: contain; pointer-events: none; }
 
 .button-primary {
   color: #fffdf2;
@@ -566,3 +565,12 @@ button {
 }
 .title-field-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .animalese-toggle { min-height: 36px; padding: 6px 10px; background: #e7efdc; color: #266d60; border-radius: 20px; cursor: pointer; font-size: 11px; }
+
+.island-time { margin: 0; padding: 16px; border: 2px dashed #c3d5ad; border-radius: 22px; background: #fff9df; min-width: 0; }
+.island-time legend { padding: 0 8px; color: #277f70; font-weight: 700; }
+.time-options { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.time-options button { padding: 10px 14px; border-radius: 20px; background: #e5edd7; color: #35685b; cursor: pointer; }
+.time-options [aria-pressed='true'] { background: #187e70; color: #fff; }
+.time-clock { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 16px 0; }
+.time-clock label { display: grid; gap: 5px; text-align: center; font-size: 11px; }
+.time-clock input { width: 76px; padding: 12px 4px; border: 2px solid #d9dfbd; border-radius: 16px; background: #fffdf2; color: #216d60; text-align: center; font-size: 28px; font-weight: 700; }

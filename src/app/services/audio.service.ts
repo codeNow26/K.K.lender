@@ -11,7 +11,7 @@ export class AudioService implements OnDestroy {
   private newEvent = false;
   private readonly tracks: Record<Music, HTMLAudioElement> = {
     menu: this.createAudio('Music/Menu-Music.mp3', 0.12, true),
-    event: this.createAudio('Music/Bubblegum.mp3', 0.1, true),
+    event: this.createAudio('Music/Bubblegum.mp3', 0.07, true),
     background: this.createAudio('Music/Background-Music.m4a', 0.035, true),
   };
   private readonly clicks = [1, 2, 3].map((number) =>
@@ -75,9 +75,9 @@ export class AudioService implements OnDestroy {
 
   private readMusicPreference(): boolean {
     try {
-      return this.document.defaultView?.localStorage.getItem('kklender-music') === 'true';
+      return this.document.defaultView?.localStorage.getItem('kklender-music') !== 'false';
     } catch {
-      return false;
+      return true;
     }
   }
 

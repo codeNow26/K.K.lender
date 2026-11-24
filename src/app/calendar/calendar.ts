@@ -187,6 +187,22 @@ export class Calendar implements OnInit, OnDestroy {
     }
   }
 
+  setTimeEnabled(enabled: boolean): void {
+    this.draftTime = enabled ? '09:00' : '';
+  }
+
+  setTimePart(part: 'hour' | 'minute', value: string): void {
+    const [hour, minute] = this.draftTime.split(':');
+    this.draftTime = part === 'hour' ? `${value}:${minute}` : `${hour}:${value}`;
+  }
+
+  adjustTime(minutes: number): void {
+    const value = /^([01]?\d|2[0-3]):([0-5]?\d)$/.test(this.draftTime) ? this.draftTime : '09:00';
+    const [hour, minute] = value.split(':').map(Number);
+    const total = ((hour * 60 + minute + minutes) % 1440 + 1440) % 1440;
+    this.draftTime = `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+  }
+
   changeMonth(direction: number): void {
     this.displayedMonth = new Date(
       this.displayedMonth.getFullYear(),
@@ -317,10 +333,15 @@ export class Calendar implements OnInit, OnDestroy {
       return;
     }
 
+    if (this.draftTime && !/^([01]?\d|2[0-3]):([0-5]?\d)$/.test(this.draftTime)) {
+      this.saveError.set('Bitte gib eine gültige Uhrzeit ein.');
+      return;
+    }
+
     const values = {
       title,
       date: this.draftDate,
-      time: this.draftTime || null,
+      time: this.draftTime ? this.draftTime.split(':').map((part) => part.padStart(2, '0')).join(':') : null,
       owner: this.draftOwner,
     };
 

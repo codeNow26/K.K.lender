@@ -24,7 +24,6 @@ describe('AudioService', () => {
     });
     vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
     service = TestBed.inject(AudioService);
-    service.toggleMusic();
   });
 
   afterEach(() => {

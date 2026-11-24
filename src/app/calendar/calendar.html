@@ -216,22 +216,33 @@
           />
         </div>
 
-        <div class="field">
-          <label for="event-time">Uhrzeit</label>
-          <input
-            id="event-time"
-            name="time"
-            type="time"
-            aria-describedby="time-hint"
-            [disabled]="isBusy"
-            [(ngModel)]="draftTime"
-          />
-        </div>
       </div>
 
-      <p id="time-hint" class="field-hint">
-        Ohne Uhrzeit wird das Inselereignis als ganztägig angezeigt.
-      </p>
+      <fieldset class="island-time" [disabled]="isBusy">
+        <legend>Unsere Inselzeit</legend>
+        <div class="time-options">
+          <button type="button" [attr.aria-pressed]="!draftTime" (click)="setTimeEnabled(false)">☀ Ganztägig</button>
+          <button type="button" [attr.aria-pressed]="!!draftTime" (click)="draftTime || setTimeEnabled(true)">◷ Mit Uhrzeit</button>
+        </div>
+        @if (draftTime) {
+          <div class="time-clock">
+            <label>Stunde
+              <input name="time-hour" aria-label="Stunde" type="text" inputmode="numeric" maxlength="2" pattern="([01]?[0-9]|2[0-3])" required [ngModel]="draftTime.split(':')[0]" (ngModelChange)="setTimePart('hour', $event)" />
+            </label>
+            <span aria-hidden="true">:</span>
+            <label>Minute
+              <input name="time-minute" aria-label="Minute" type="text" inputmode="numeric" maxlength="2" pattern="[0-5]?[0-9]" required [ngModel]="draftTime.split(':')[1]" (ngModelChange)="setTimePart('minute', $event)" />
+            </label>
+          </div>
+          <div class="time-options">
+            <button type="button" (click)="adjustTime(-15)">−15 Min.</button>
+            <button type="button" (click)="adjustTime(15)">+15 Min.</button>
+          </div>
+          <p class="field-hint">Einfach auf Stunde oder Minute tippen.</p>
+        } @else {
+          <p class="field-hint">Ganz entspannt, ohne feste Uhrzeit.</p>
+        }
+      </fieldset>
 
       <div class="field">
         <label for="event-owner">Für wen?</label>

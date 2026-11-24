@@ -63,4 +63,25 @@ describe('Calendar audio lifecycle', () => {
     calendar.selectDay(12);
     expect(audio.playDayClick).toHaveBeenCalledOnce();
   });
+  it('adjusts time across midnight and clears it for all-day events', () => {
+    calendar.draftTime = '23:50';
+    calendar.adjustTime(15);
+    expect(calendar.draftTime).toBe('00:05');
+    calendar.adjustTime(-15);
+    expect(calendar.draftTime).toBe('23:50');
+    calendar.setTimeEnabled(false);
+    expect(calendar.draftTime).toBe('');
+  });
+
+  it('rejects incomplete or invalid time instead of saving an all-day event', async () => {
+    calendar.openNewEvent();
+    calendar.draftTitle = 'Inselbesuch';
+    calendar.draftTime = '25:00';
+    await calendar.saveEvent();
+    expect(result).not.toHaveBeenCalled();
+    expect(calendar.saveError()).toContain('Uhrzeit');
+    calendar.draftTime = ':30';
+    await calendar.saveEvent();
+    expect(result).not.toHaveBeenCalled();
+  });
 });
