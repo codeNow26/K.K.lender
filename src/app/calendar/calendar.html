@@ -36,15 +36,22 @@
         [attr.aria-pressed]="isSelected(day)"
         [attr.aria-label]="
           day + '. ' + monthLabel +
-          (hasEvents(day) ? ', Termine: ' + ownersOnDay(day).join(', ') : '')
+          (hasEvents(day) ? ', Termine: ' + eventTitlesOnDay(day) : '')
         "
         (click)="selectDay(day)"
       >
-        <span>{{ day }}</span>
-
-        <span class="day__markers">
-          @for (owner of ownersOnDay(day); track owner) {
-            <img [src]="ownerIcons[owner]" [alt]="owner" [title]="owner" width="16" height="16" />
+        <span class="day__number">{{ day }}</span>
+        @let dailyEvents = eventsOnDay(day);
+        <span class="day__previews">
+          @for (event of dailyEvents.slice(0, 2); track event.id) {
+            <span class="day__preview"
+              [class.day__preview--philipp]="event.owner === 'Philipp'"
+              [class.day__preview--adriana]="event.owner === 'Adriana'"
+              [class.day__preview--shared]="event.owner === 'Gemeinsam'"
+              [title]="event.title">{{ event.title }}</span>
+          }
+          @if (dailyEvents.length > 2) {
+            <span class="day__more">+{{ dailyEvents.length - 2 }} weitere</span>
           }
         </span>
       </button>
