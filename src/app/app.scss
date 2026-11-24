@@ -385,3 +385,29 @@ button {
 }
 
 .account-bar { justify-content: flex-end; }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.music-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  color: #fff7d5;
+  background: #10685f;
+  border: 1px solid #ffffff65;
+  font-size: 12px;
+  cursor: pointer;
+
+  &:focus-visible { outline: 3px solid #f8d76b; outline-offset: 3px; }
+  &[aria-pressed='true'] { background: #fff5cd; color: #10685f; }
+}
+
+@media (max-width: 520px) {
+  .planner__header { flex-wrap: wrap; gap: 12px; }
+  .header-actions { margin-left: auto; }
+}

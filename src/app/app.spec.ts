@@ -8,7 +8,7 @@ import { SupabaseService } from './services/supabase.service';
 describe('App', () => {
   it('plays menu music only after auth initialization on the login screen', async () => {
     const auth = { isInitializing: signal(true), session: signal(null) };
-    const audio = { setLoginScreen: vi.fn() };
+    const audio = { setScreen: vi.fn(), musicEnabled: signal(false) };
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
@@ -18,10 +18,10 @@ describe('App', () => {
     }).compileComponents();
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
-    expect(audio.setLoginScreen).toHaveBeenLastCalledWith(false);
+    expect(audio.setScreen).toHaveBeenLastCalledWith(null);
     auth.isInitializing.set(false);
     fixture.detectChanges();
-    expect(audio.setLoginScreen).toHaveBeenLastCalledWith(true);
+    expect(audio.setScreen).toHaveBeenLastCalledWith('login');
     expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain('K.K.Lender');
   });
 });

@@ -11,7 +11,20 @@
       </div>
     </div>
 
-    <span class="planner__badge">Unsere Inselzeit</span>
+    <div class="header-actions">
+      <span class="planner__badge">Unsere Inselzeit</span>
+      <button
+        type="button"
+        class="music-toggle"
+        [attr.aria-pressed]="audio.musicEnabled()"
+        [attr.aria-label]="audio.musicEnabled() ? 'Musik ausschalten' : 'Musik einschalten'"
+        [title]="audio.musicEnabled() ? 'Musik ausschalten' : 'Musik einschalten'"
+        (click)="audio.toggleMusic()"
+      >
+        <span aria-hidden="true">{{ audio.musicEnabled() ? '♫' : '♪' }}</span>
+        <span>Musik {{ audio.musicEnabled() ? 'an' : 'aus' }}</span>
+      </button>
+    </div>
   </header>
 
   @if (auth.isInitializing()) {

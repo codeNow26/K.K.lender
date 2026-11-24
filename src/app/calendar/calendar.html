@@ -36,21 +36,17 @@
         [attr.aria-pressed]="isSelected(day)"
         [attr.aria-label]="
           day + '. ' + monthLabel +
-          (hasEvents(day) ? ', mit Inselereignissen' : '')
+          (hasEvents(day) ? ', Termine: ' + ownersOnDay(day).join(', ') : '')
         "
         (click)="selectDay(day)"
       >
         <span>{{ day }}</span>
 
-        @if (hasEvents(day)) {
-          <img
-            class="day__leaf"
-            src="images/leaf.webp"
-            alt=""
-            width="12"
-            height="12"
-          />
-        }
+        <span class="day__markers">
+          @for (owner of ownersOnDay(day); track owner) {
+            <img [src]="ownerIcons[owner]" [alt]="owner" [title]="owner" width="16" height="16" />
+          }
+        </span>
       </button>
     } @else {
       <span class="day day--empty" aria-hidden="true"></span>
@@ -186,7 +182,12 @@
       (ngSubmit)="eventForm.valid && saveEvent()"
     >
       <div class="field">
-        <label for="event-title">Was steht an?</label>
+        <div class="title-field-heading">
+          <label for="event-title">Was steht an?</label>
+          <button type="button" class="animalese-toggle" [attr.aria-pressed]="animalese.enabled()" (click)="animalese.toggle()">
+            Animalese {{ animalese.enabled() ? 'an' : 'aus' }}
+          </button>
+        </div>
         <input
           id="event-title"
           name="title"
@@ -196,6 +197,7 @@
           required
           [disabled]="isBusy"
           [(ngModel)]="draftTitle"
+          (input)="animalese.onInput($event)"
         />
       </div>
 

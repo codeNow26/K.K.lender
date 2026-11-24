@@ -552,3 +552,17 @@ button {
   }
 }
 
+
+.day__markers {
+  position: absolute;
+  bottom: 2px;
+  left: 1px;
+  right: 1px;
+  display: flex;
+  justify-content: center;
+  gap: 1px;
+  pointer-events: none;
+  img { width: min(16px, 29%); height: 16px; object-fit: contain; }
+}
+.title-field-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.animalese-toggle { min-height: 36px; padding: 6px 10px; background: #e7efdc; color: #266d60; border-radius: 20px; cursor: pointer; font-size: 11px; }

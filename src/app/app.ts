@@ -12,11 +12,13 @@ import { SupabaseService } from './services/supabase.service';
 })
 export class App {
   readonly auth = inject(SupabaseService);
-  private readonly audio = inject(AudioService);
+  readonly audio = inject(AudioService);
 
   constructor() {
     effect(() => {
-      this.audio.setLoginScreen(!this.auth.isInitializing() && !this.auth.session());
+      this.audio.setScreen(
+        this.auth.isInitializing() ? null : this.auth.session() ? 'calendar' : 'login',
+      );
     });
   }
 
@@ -31,6 +33,7 @@ export class App {
       return;
     }
 
+    this.audio.playLoginSound();
     this.isBusy.set(true);
     this.errorMessage.set('');
 
@@ -43,9 +46,7 @@ export class App {
       if (code === 'invalid_credentials') {
         this.errorMessage.set('E-Mail oder Passwort stimmt nicht.');
       } else if (code === 'email_not_confirmed') {
-        this.errorMessage.set(
-          'Deine E-Mail-Adresse ist noch nicht bestätigt.',
-        );
+        this.errorMessage.set('Deine E-Mail-Adresse ist noch nicht bestätigt.');
       } else {
         this.errorMessage.set(
           'Die Anmeldung hat nicht geklappt. Prüfe deine Verbindung und versuche es erneut.',
@@ -68,9 +69,7 @@ export class App {
       await this.auth.signOut();
       this.password = '';
     } catch {
-      this.errorMessage.set(
-        'Die Abmeldung hat nicht geklappt. Bitte versuche es erneut.',
-      );
+      this.errorMessage.set('Die Abmeldung hat nicht geklappt. Bitte versuche es erneut.');
     } finally {
       this.isBusy.set(false);
     }

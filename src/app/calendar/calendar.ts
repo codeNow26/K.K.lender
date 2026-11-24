@@ -1,14 +1,8 @@
-import {
-  Component,
-  HostListener,
-  OnDestroy,
-  OnInit,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { AnimaleseService } from '../services/animalese.service';
 import { AudioService } from '../services/audio.service';
 import { SupabaseService } from '../services/supabase.service';
 
@@ -29,6 +23,7 @@ interface CalendarEvent {
   styleUrl: './calendar.scss',
 })
 export class Calendar implements OnInit, OnDestroy {
+  readonly animalese = inject(AnimaleseService);
   private readonly audio = inject(AudioService);
   private readonly supabase = inject(SupabaseService);
   private readonly document = inject(DOCUMENT);
@@ -50,11 +45,7 @@ export class Calendar implements OnInit, OnDestroy {
   readonly successMessage = signal('');
   readonly syncStatus = signal('Live-Verbindung wird aufgebaut …');
 
-  displayedMonth = new Date(
-    new Date().getFullYear(),
-    new Date().getMonth(),
-    1,
-  );
+  displayedMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
   selectedDate = new Date();
   isFormOpen = false;
@@ -73,6 +64,7 @@ export class Calendar implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.isDestroyed = true;
     this.audio.setNewEvent(false);
+    this.animalese.stop();
 
     if (this.realtimeChannel) {
       void this.supabase.client.removeChannel(this.realtimeChannel);
@@ -183,9 +175,7 @@ export class Calendar implements OnInit, OnDestroy {
       this.events.set(events);
     } catch {
       if (!this.isDestroyed) {
-        this.loadError.set(
-          'Die Termine konnten nicht geladen werden. Bitte versuche es erneut.',
-        );
+        this.loadError.set('Die Termine konnten nicht geladen werden. Bitte versuche es erneut.');
       }
     } finally {
       this.loadInProgress = false;
@@ -208,11 +198,7 @@ export class Calendar implements OnInit, OnDestroy {
   goToToday(): void {
     const today = new Date();
 
-    this.displayedMonth = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      1,
-    );
+    this.displayedMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
     this.selectedDate = today;
   }
@@ -234,13 +220,24 @@ export class Calendar implements OnInit, OnDestroy {
     return this.isSameDay(day, this.selectedDate);
   }
 
+  readonly ownerIcons: Record<EventOwner, string> = {
+    Philipp: 'images/kk-icon.webp',
+    Adriana: 'images/isabelle-icon.webp',
+    Gemeinsam: 'images/leaf.webp',
+  };
+
+  ownersOnDay(day: number): EventOwner[] {
+    const key = this.toDateKey(
+      new Date(this.displayedMonth.getFullYear(), this.displayedMonth.getMonth(), day),
+    );
+    return (['Philipp', 'Adriana', 'Gemeinsam'] as EventOwner[]).filter((owner) =>
+      this.events().some((event) => event.date === key && event.owner === owner),
+    );
+  }
+
   hasEvents(day: number): boolean {
     const date = this.toDateKey(
-      new Date(
-        this.displayedMonth.getFullYear(),
-        this.displayedMonth.getMonth(),
-        day,
-      ),
+      new Date(this.displayedMonth.getFullYear(), this.displayedMonth.getMonth(), day),
     );
 
     return this.events().some((event) => event.date === date);
@@ -273,6 +270,7 @@ export class Calendar implements OnInit, OnDestroy {
     }
 
     this.audio.setNewEvent(false);
+    this.animalese.stop();
     this.editingId = event.id;
     this.draftTitle = event.title;
     this.draftDate = event.date;
@@ -287,6 +285,7 @@ export class Calendar implements OnInit, OnDestroy {
     if (this.isBusy) return;
 
     this.audio.setNewEvent(false);
+    this.animalese.stop();
     this.isFormOpen = false;
     this.editingId = null;
     this.saveError.set('');
@@ -329,10 +328,7 @@ export class Calendar implements OnInit, OnDestroy {
 
     try {
       const query = editingId
-        ? this.supabase.client
-            .from('events')
-            .update(values)
-            .eq('id', editingId)
+        ? this.supabase.client.from('events').update(values).eq('id', editingId)
         : this.supabase.client.from('events').insert(values);
 
       const { data, error } = await query
@@ -350,21 +346,17 @@ export class Calendar implements OnInit, OnDestroy {
         return;
       }
 
-      this.events.update((events) => [
-        ...events.filter((event) => event.id !== data.id),
-        data,
-      ]);
+      this.events.update((events) => [...events.filter((event) => event.id !== data.id), data]);
 
       this.selectedDate = date;
       this.displayedMonth = new Date(year, month - 1, 1);
       this.audio.setNewEvent(false);
+      this.animalese.stop();
       this.isFormOpen = false;
       this.editingId = null;
 
       this.successMessage.set(
-        editingId
-          ? 'Dein Termin wurde geändert. 🌿'
-          : 'Dein Termin wurde gespeichert. 🌿',
+        editingId ? 'Dein Termin wurde geändert. 🌿' : 'Dein Termin wurde gespeichert. 🌿',
       );
     } catch (error: unknown) {
       if (this.isDestroyed) return;
@@ -415,19 +407,16 @@ export class Calendar implements OnInit, OnDestroy {
       if (error) throw error;
 
       if (!data) {
-        this.actionError.set(
-          'Der Termin wurde bereits entfernt oder du hast keinen Zugriff.',
-        );
+        this.actionError.set('Der Termin wurde bereits entfernt oder du hast keinen Zugriff.');
         this.reloadPending = true;
         return;
       }
 
-      this.events.update((events) =>
-        events.filter((item) => item.id !== event.id),
-      );
+      this.events.update((events) => events.filter((item) => item.id !== event.id));
 
       if (this.editingId === event.id) {
         this.audio.setNewEvent(false);
+        this.animalese.stop();
         this.isFormOpen = false;
         this.editingId = null;
       }
@@ -467,14 +456,8 @@ export class Calendar implements OnInit, OnDestroy {
         if (status === 'SUBSCRIBED') {
           this.syncStatus.set('Live verbunden 🌿');
           void this.loadEvents();
-        } else if (
-          status === 'CHANNEL_ERROR' ||
-          status === 'TIMED_OUT' ||
-          status === 'CLOSED'
-        ) {
-          this.syncStatus.set(
-            'Live-Verbindung unterbrochen · Bei Bedarf Termine aktualisieren',
-          );
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          this.syncStatus.set('Live-Verbindung unterbrochen · Bei Bedarf Termine aktualisieren');
         }
       });
   }
@@ -486,12 +469,7 @@ export class Calendar implements OnInit, OnDestroy {
   }
 
   private runPendingReload(): void {
-    if (
-      this.reloadPending &&
-      !this.isDestroyed &&
-      !this.isBusy &&
-      !this.loadInProgress
-    ) {
+    if (this.reloadPending && !this.isDestroyed && !this.isBusy && !this.loadInProgress) {
       this.reloadPending = false;
       void this.loadEvents();
     }
