@@ -1,9 +1,13 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, HostListener, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Calendar } from './calendar/calendar';
 import { AnimaleseService } from './services/animalese.service';
 import { AudioService } from './services/audio.service';
 import { SupabaseService } from './services/supabase.service';
+
+interface InstallPromptEvent extends Event {
+  prompt(): Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 @Component({
   selector: 'app-root',
@@ -15,6 +19,52 @@ export class App {
   readonly auth = inject(SupabaseService);
   readonly audio = inject(AudioService);
   readonly animalese = inject(AnimaleseService);
+
+  private installPrompt: InstallPromptEvent | null = null;
+  readonly installRequested = signal(
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('install') === '1' &&
+    !window.matchMedia('(display-mode: standalone)').matches
+  );
+  readonly installHelp = signal(false);
+
+  @HostListener('window:beforeinstallprompt', ['$event'])
+  onInstallPrompt(event: Event): void {
+    if (!this.installRequested()) return;
+    event.preventDefault();
+    this.installPrompt = event as InstallPromptEvent;
+    this.installHelp.set(false);
+  }
+
+  @HostListener('window:appinstalled')
+  onAppInstalled(): void {
+    this.installPrompt = null;
+    this.dismissInstall();
+  }
+
+  dismissInstall(): void {
+    this.installRequested.set(false);
+    this.installHelp.set(false);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('install');
+    window.history.replaceState(window.history.state, '', url);
+  }
+
+  async installApp(): Promise<void> {
+    const prompt = this.installPrompt;
+    if (!prompt) {
+      this.installHelp.set(true);
+      return;
+    }
+    this.installPrompt = null;
+    try {
+      const result = await prompt.prompt();
+      if (result.outcome === 'accepted') this.dismissInstall();
+      else this.installHelp.set(true);
+    } catch {
+      this.installHelp.set(true);
+    }
+  }
 
   constructor() {
     effect(() => {
