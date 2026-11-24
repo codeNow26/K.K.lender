@@ -268,17 +268,17 @@ button {
   border-radius: 20px;
 
   &--philipp {
-    border-left-color: #4b9a84;
-    background: #eaf2e5;
+    border-left-color: #3fa79c;
+    background: #ddf3ef;
   }
 
   &--adriana {
-    border-left-color: #ca8b9b;
-    background: #faedef;
+    border-left-color: #bba4df;
+    background: #eee7f8;
   }
 
   &--shared {
-    border-left-color: #d5af4f;
+    border-left-color: #efd37e;
     background: #faf2d5;
   }
 
@@ -610,8 +610,8 @@ button {
   font-weight: 600;
   text-align: left;
 }
-.day__preview--philipp { background: #d8eadb; color: #356b57; }
-.day__preview--adriana { background: #f4dce3; color: #855266; }
+.day__preview--philipp { background: #ddf3ef; color: #267d78; }
+.day__preview--adriana { background: #eee7f8; color: #79639c; }
 .day__preview--shared { background: #f4e4b2; color: #796027; }
 .day__more { font-size: 10px; line-height: 1.2; color: #69654f; }
 .day__more--mobile { display: none; }
@@ -693,8 +693,8 @@ button {
 }
 .owner-option__card img { object-fit: contain; flex-shrink: 0; }
 .owner-option--shared .owner-option__card { background: #faf2d5; color: #796027; }
-.owner-option--philipp .owner-option__card { background: #eaf2e5; color: #356b57; }
-.owner-option--adriana .owner-option__card { background: #faedef; color: #855266; }
+.owner-option--philipp .owner-option__card { background: #ddf3ef; color: #267d78; }
+.owner-option--adriana .owner-option__card { background: #eee7f8; color: #79639c; }
 .owner-option__indicator {
   display: grid;
   place-items: center;
@@ -725,3 +725,7 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .owner-option__card { transition: none; }
 }
+
+.event-card__owner { display: inline-flex; align-items: center; gap: 5px; }
+.event-card__owner img { object-fit: contain; flex-shrink: 0; }
+.owner-option__card img { width: 36px; height: 36px; }
