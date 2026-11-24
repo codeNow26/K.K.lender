@@ -236,6 +236,12 @@ export class Calendar implements OnInit, OnDestroy {
     return this.isSameDay(day, this.selectedDate);
   }
 
+  readonly ownerLabels: Record<EventOwner, string> = {
+    Philipp: 'Phjelepp',
+    Adriana: 'Adritz',
+    Gemeinsam: 'Together',
+  };
+
   readonly ownerIcons: Record<EventOwner, string> = {
     Philipp: 'images/kk-icon.webp',
     Adriana: 'images/isabelle-icon.webp',
