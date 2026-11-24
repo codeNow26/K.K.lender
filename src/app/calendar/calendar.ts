@@ -246,7 +246,7 @@ export class Calendar implements OnInit, OnDestroy {
   readonly ownerIcons: Record<EventOwner, string> = {
     Philipp: 'images/huschke-head.png',
     Adriana: 'images/ione-head.png',
-    Gemeinsam: 'images/together-heart.svg',
+    Gemeinsam: 'https://dodo.ac/np/images/5/59/Emotion_Love_NH_Icon.png',
   };
 
   ownersOnDay(day: number): EventOwner[] {
