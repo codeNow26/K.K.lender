@@ -18,10 +18,10 @@ export class AnimaleseService implements OnDestroy {
     }
   }
 
-  onInput(event: Event): void {
+  onInput(event: Event, force = false, mask = false): void {
     const input = event as InputEvent;
     if (
-      !this.enabled() ||
+      (!force && !this.enabled()) ||
       this.document.hidden ||
       input.isComposing ||
       input.inputType !== 'insertText' ||
@@ -29,7 +29,7 @@ export class AnimaleseService implements OnDestroy {
       [...input.data].length !== 1
     )
       return;
-    const letter = input.data
+    const letter = mask ? String.fromCharCode(97 + Math.floor(Math.random() * 26)) : input.data
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
