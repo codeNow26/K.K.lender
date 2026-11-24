@@ -239,14 +239,14 @@ export class Calendar implements OnInit, OnDestroy {
   readonly ownerChoices: readonly EventOwner[] = ['Gemeinsam', 'Philipp', 'Adriana'];
   readonly ownerLabels: Record<EventOwner, string> = {
     Philipp: 'Phjelepp',
-    Adriana: 'Adritz',
+    Adriana: 'Adrietz',
     Gemeinsam: 'Together',
   };
 
   readonly ownerIcons: Record<EventOwner, string> = {
-    Philipp: 'images/kk-icon.webp',
-    Adriana: 'images/isabelle-icon.webp',
-    Gemeinsam: 'images/leaf.webp',
+    Philipp: 'images/huschke-head.png',
+    Adriana: 'images/ione-head.png',
+    Gemeinsam: 'images/together-heart.svg',
   };
 
   ownersOnDay(day: number): EventOwner[] {
