@@ -1,0 +1,50 @@
+name: Deploy K.K.Lender to IONOS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kklender-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Upload Angular build via SFTP
+        env:
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_USER: ${{ secrets.SFTP_USER }}
+          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+        run: |
+          set -eu
+          test -s dist/inselkalender/browser/index.html
+          sudo apt-get update
+          sudo apt-get install -y lftp
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "access-5020380091.webspace-host.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINbBMvvDjN4IP04VAZlDH42A+HL25ifeIK9CorAvaMA/" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+          lftp -u "$SFTP_USER","$SFTP_PASSWORD" -p 22 "sftp://$SFTP_HOST" <<'EOF'
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 30
+          set sftp:auto-confirm no
+          mirror --reverse --verbose --exclude-glob index.html dist/inselkalender/browser/ ./
+          put dist/inselkalender/browser/index.html -o index.html
+          bye
+          EOF
