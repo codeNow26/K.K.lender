@@ -23,6 +23,12 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Fetch matching New Horizons portrait icons
+        run: |
+          mkdir -p public/images
+          curl --fail --silent --show-error --location --retry 3 --max-time 45 'https://soopool.art/img/infoacnh/Neighbor/squ17.png' -o public/images/huschke-head.png
+          curl --fail --silent --show-error --location --retry 3 --max-time 45 'https://soopool.art/img/infoacnh/Neighbor/squ21.png' -o public/images/ione-head.png
+          python -c "from pathlib import Path; assert all(p.read_bytes().startswith(bytes.fromhex('89504e470d0a1a0a')) for p in map(Path, ['public/images/huschke-head.png', 'public/images/ione-head.png']))"
       - run: npm run build
       - name: Upload Angular build via SFTP
         env:
