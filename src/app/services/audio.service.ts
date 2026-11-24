@@ -23,6 +23,11 @@ export class AudioService implements OnDestroy {
   private current: Music | null = null;
   private click: HTMLAudioElement | null = null;
   private readonly retryPlayback = () => this.playCurrent();
+  private readonly restartMenu = () => {
+    if (this.current !== 'menu' || !this.musicEnabled() || this.document.hidden) return;
+    this.tracks.menu.currentTime = 5;
+    this.play(this.tracks.menu);
+  };
   private readonly visibilityChanged = () => {
     if (this.document.hidden) {
       this.stopTracks();
@@ -34,6 +39,10 @@ export class AudioService implements OnDestroy {
   };
 
   constructor() {
+    this.tracks.menu.loop = false;
+    this.tracks.menu.preload = 'auto';
+    this.tracks.menu.currentTime = 5;
+    this.tracks.menu.addEventListener('ended', this.restartMenu);
     // Retry blocked autoplay only after a real user interaction.
     this.document.addEventListener('pointerdown', this.retryPlayback);
     this.document.addEventListener('keydown', this.retryPlayback);
@@ -104,6 +113,7 @@ export class AudioService implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.tracks.menu.removeEventListener('ended', this.restartMenu);
     this.document.removeEventListener('pointerdown', this.retryPlayback);
     this.document.removeEventListener('keydown', this.retryPlayback);
     this.document.removeEventListener('touchend', this.retryPlayback);
@@ -136,6 +146,7 @@ export class AudioService implements OnDestroy {
     this.fades.delete(track);
     if (target > 0 && audio.paused) {
       audio.volume = 0;
+      if (track === 'menu' && audio.currentTime < 5) audio.currentTime = 5;
       this.play(audio);
     }
     const from = audio.volume;
@@ -143,7 +154,7 @@ export class AudioService implements OnDestroy {
       audio.volume = target;
       if (target === 0 && !(track === 'background' && this.screen === 'calendar' && this.musicEnabled())) {
         audio.pause();
-        if (track !== this.current && track !== 'background') audio.currentTime = 0;
+        if (track !== this.current && track !== 'background') audio.currentTime = track === 'menu' ? 5 : 0;
       }
     };
     if (from === target) { finish(); return; }
