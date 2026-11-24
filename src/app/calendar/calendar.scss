@@ -574,3 +574,5 @@ button {
 .time-clock { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 16px 0; }
 .time-clock label { display: grid; gap: 5px; text-align: center; font-size: 11px; }
 .time-clock input { width: 76px; padding: 12px 4px; border: 2px solid #d9dfbd; border-radius: 16px; background: #fffdf2; color: #216d60; text-align: center; font-size: 28px; font-weight: 700; }
+
+.island-time .field-hint { display: block; position: static; margin: 12px 0 0; text-align: center; line-height: 1.5; }
