@@ -70,8 +70,10 @@ jobs:
           cmp dist/inselkalender/browser/index.html /tmp/preview-index.html
       - name: Verify balloon in real desktop and mobile browsers
         run: |
-          npm install --no-save --package-lock=false playwright-core
-          node scripts/check-balloon-preview.mjs
+          mkdir -p "$RUNNER_TEMP/balloon-check"
+          npm install --prefix "$RUNNER_TEMP/balloon-check" --no-save --package-lock=false playwright-core
+          cp scripts/check-balloon-preview.mjs "$RUNNER_TEMP/balloon-check/"
+          node "$RUNNER_TEMP/balloon-check/check-balloon-preview.mjs"
       - name: Keep browser test screenshots
         if: always()
         uses: actions/upload-artifact@v4

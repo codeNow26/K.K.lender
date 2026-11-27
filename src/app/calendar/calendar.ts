@@ -50,7 +50,9 @@ export class Calendar implements OnInit, OnDestroy {
   displayedMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
   selectedDate = new Date();
-  isFormOpen = false;
+  readonly formOpen = signal(false);
+  get isFormOpen(): boolean { return this.formOpen(); }
+  set isFormOpen(value: boolean) { this.formOpen.set(value); }
   editingId: string | null = null;
 
   draftTitle = '';
