@@ -1,6 +1,7 @@
 import { Component, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { BalloonGift } from '../balloon-gift/balloon-gift';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { AnimaleseService } from '../services/animalese.service';
 import { AudioService } from '../services/audio.service';
@@ -19,7 +20,7 @@ interface CalendarEvent {
 
 @Component({
   selector: 'app-calendar',
-  imports: [FormsModule],
+  imports: [FormsModule, BalloonGift],
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss',
 })

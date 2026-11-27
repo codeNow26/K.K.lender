@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, Input, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { AudioService } from '../services/audio.service';
 
 const BALLOONS = [
@@ -32,21 +32,47 @@ export class BalloonGift implements OnInit, OnDestroy {
   private flightTimer?: ReturnType<typeof setTimeout>;
   private rewardTimer?: ReturnType<typeof setTimeout>;
   private lastReward = -1;
+  private dueAt = 0;
+  private initialized = false;
+  private editorOpen = false;
+
+  @Input() set paused(value: boolean) {
+    if (this.editorOpen === value) return;
+    this.editorOpen = value;
+    if (this.initialized) this.updateAvailability();
+  }
 
   ngOnInit(): void {
+    this.initialized = true;
     this.schedule(20000 + Math.random() * 10000);
   }
 
   ngOnDestroy(): void {
+    this.initialized = false;
     this.clearTimers();
   }
 
   @HostListener('document:visibilitychange')
   onVisibility(): void {
-    this.clearTimers();
-    this.gift.set(null);
-    this.reward.set('');
-    if (!this.document.hidden) this.schedule(20000 + Math.random() * 10000);
+    if (this.initialized) this.updateAvailability();
+  }
+
+  private get unavailable(): boolean {
+    return this.editorOpen || this.document.hidden;
+  }
+
+  private updateAvailability(): void {
+    if (this.unavailable) {
+      this.clearTimers();
+      if (this.gift()) {
+        // An interrupted flight was not missed; let it reappear when safe.
+        this.gift.set(null);
+        this.dueAt = Date.now() + 1000;
+      }
+      this.reward.set('');
+    } else if (!this.gift()) {
+      this.armTimer();
+    }
   }
 
   catchGift(): void {
@@ -75,17 +101,22 @@ export class BalloonGift implements OnInit, OnDestroy {
   }
 
   private schedule(delay: number): void {
+    this.dueAt = Date.now() + delay;
+    this.armTimer();
+  }
+
+  private armTimer(): void {
     clearTimeout(this.nextTimer);
-    if (this.document.hidden) return;
+    if (!this.initialized || this.unavailable || this.gift()) return;
     this.nextTimer = setTimeout(() => {
-      if (this.document.hidden) return;
+      if (!this.initialized || this.unavailable || this.gift()) return;
       this.gift.set({
         palette: BALLOONS[Math.floor(Math.random() * BALLOONS.length)],
         reverse: Math.random() > 0.5,
       });
       // Also expires when animations are disabled or interrupted.
       this.flightTimer = setTimeout(() => this.finishFlight(), 24000);
-    }, delay);
+    }, Math.max(0, this.dueAt - Date.now()));
   }
 
   private clearTimers(): void {
