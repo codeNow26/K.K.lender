@@ -12,6 +12,17 @@ try {
     if (fast) await page.clock.install();
     await page.goto(url + '?v=' + process.env.GITHUB_SHA + (fast ? '&gift=1' : ''), { waitUntil: 'domcontentloaded' });
     await page.getByRole('heading', { name: 'Inselpläne' }).waitFor({ timeout: 15000 });
+    const seasonal = page.locator('.seasonal-scene');
+    const month = new Date().getMonth();
+    const season = month >= 2 && month <= 4 ? 'spring' : month >= 5 && month <= 7 ? 'summer' : month >= 8 && month <= 10 ? 'autumn' : 'winter';
+    assert.equal(await seasonal.getAttribute('data-season'), season);
+    assert.equal(await seasonal.evaluate(el => getComputedStyle(el).pointerEvents), 'none');
+    const monthLabel = page.locator('.month-navigation h3');
+    const before = await monthLabel.textContent();
+    await page.getByRole('button', { name: 'Nächster Monat' }).click();
+    assert.notEqual(await monthLabel.textContent(), before);
+    await page.getByRole('button', { name: 'Vorheriger Monat' }).click();
+    assert.equal(await monthLabel.textContent(), before);
     const balloon = page.getByRole('button', { name: 'Fliegendes Inselgeschenk fangen' });
     const openEditor = () => page.getByRole('button', { name: 'Inselereignis', exact: true }).click();
     const saveEditor = async () => {

@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -46,6 +46,9 @@ export class Calendar implements OnInit, OnDestroy {
   readonly successMessage = signal('');
   readonly syncStatus = signal('Live-Verbindung wird aufgebaut …');
 
+  @ViewChild('monthGrid') private monthGrid?: ElementRef<HTMLDivElement>;
+  private monthAnimation?: Animation;
+
   displayedMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
   selectedDate = new Date();
@@ -67,6 +70,7 @@ export class Calendar implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.isDestroyed = true;
+    this.monthAnimation?.cancel();
     this.audio.setNewEvent(false);
     this.animalese.stop();
 
@@ -232,14 +236,30 @@ export class Calendar implements OnInit, OnDestroy {
       this.displayedMonth.getMonth() + direction,
       1,
     );
+    this.animateMonth(direction);
   }
 
   goToToday(): void {
     const today = new Date();
-
-    this.displayedMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
+    const nextMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const direction = Math.sign(nextMonth.getTime() - this.displayedMonth.getTime());
+    this.displayedMonth = nextMonth;
     this.selectedDate = today;
+    if (direction) this.animateMonth(direction);
+  }
+
+  private animateMonth(direction: number): void {
+    this.monthAnimation?.cancel();
+    const grid = this.monthGrid?.nativeElement;
+    if (!grid || typeof grid.animate !== 'function' ||
+        this.document.defaultView?.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    this.monthAnimation = grid.animate(
+      [
+        { opacity: 0.65, transform: `translateX(${Math.sign(direction) * 10}px)` },
+        { opacity: 1, transform: 'translateX(0)' },
+      ],
+      { duration: 240, easing: 'cubic-bezier(0.2, 0.75, 0.25, 1)' },
+    );
   }
 
   selectDay(day: number): void {
