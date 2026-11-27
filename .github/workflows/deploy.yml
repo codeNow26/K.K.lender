@@ -29,7 +29,22 @@ jobs:
           curl --fail --silent --show-error --location --retry 3 --max-time 45 'https://soopool.art/img/infoacnh/Neighbor/squ17.png' -o public/images/huschke-head.png
           curl --fail --silent --show-error --location --retry 3 --max-time 45 'https://soopool.art/img/infoacnh/Neighbor/squ21.png' -o public/images/ione-head.png
           python -c "from pathlib import Path; assert all(p.read_bytes().startswith(bytes.fromhex('89504e470d0a1a0a')) for p in map(Path, ['public/images/huschke-head.png', 'public/images/ione-head.png']))"
+      - run: node --test scripts/check-app-update.test.mjs
       - run: npm run build
+      - name: Stamp the production release
+        run: |
+          python - <<'PY'
+          import os, json
+          from pathlib import Path
+          root = Path('dist/inselkalender/browser')
+          version = os.environ['GITHUB_SHA']
+          index = root / 'index.html'
+          html = index.read_text()
+          marker = 'name="kklender-release" content="development"'
+          assert marker in html
+          index.write_text(html.replace(marker, f'name="kklender-release" content="{version}"'))
+          (root / 'app-version.json').write_text(json.dumps({'version': version}))
+          PY
       - name: Upload Angular build via SFTP
         env:
           SFTP_HOST: ${{ secrets.SFTP_HOST }}
@@ -52,9 +67,10 @@ jobs:
           set net:max-retries 2
           set net:timeout 30
           set sftp:auto-confirm no
-          mirror --reverse --verbose --exclude-glob index.html dist/inselkalender/browser/ ./
+          mirror --reverse --verbose --exclude-glob index.html --exclude-glob app-version.json dist/inselkalender/browser/ ./
           put dist/inselkalender/browser/.htaccess -o .htaccess
           put dist/inselkalender/browser/index.html -o index.html
+          put dist/inselkalender/browser/app-version.json -o app-version.json
           bye
           EOF
 
@@ -66,6 +82,8 @@ jobs:
           cmp dist/inselkalender/browser/index.html /tmp/live-index.html
           curl --fail --silent --show-error --retry 3 -H 'Cache-Control: no-cache' "$base/" -o /tmp/live-root.html
           cmp dist/inselkalender/browser/index.html /tmp/live-root.html
+          curl --fail --silent --show-error --retry 3 "$base/app-version.json?v=${GITHUB_SHA}" -o /tmp/live-version.json
+          cmp dist/inselkalender/browser/app-version.json /tmp/live-version.json
           curl --fail --silent --show-error --retry 3 "$base/Music/Background-Music.m4a?v=16bff387" -o /tmp/live-background.m4a
           cmp dist/inselkalender/browser/Music/Background-Music.m4a /tmp/live-background.m4a
           curl --fail --silent --show-error --head "$base/" | grep -i '^cache-control:'
