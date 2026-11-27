@@ -1,5 +1,5 @@
 @if (gift(); as floating) {
-  <div class="flight" [class.flight--reverse]="floating.reverse" (animationend)="finishFlight()">
+  <div class="flight" [class.flight--reverse]="floating.reverse" (animationend)="onFlightAnimationEnd($event)">
     <button class="balloon" type="button" aria-label="Fliegendes Inselgeschenk fangen" (click)="catchGift()"
       [style.--balloon-light]="floating.palette.light" [style.--balloon-mid]="floating.palette.mid" [style.--balloon-dark]="floating.palette.dark">
       <svg viewBox="0 0 84 120" aria-hidden="true" focusable="false">

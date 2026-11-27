@@ -89,6 +89,10 @@ export class BalloonGift implements OnInit, OnDestroy {
     this.scheduleNext();
   }
 
+  onFlightAnimationEnd(event: AnimationEvent): void {
+    if (event.target === event.currentTarget) this.finishFlight();
+  }
+
   finishFlight(): void {
     if (!this.gift()) return;
     clearTimeout(this.flightTimer);

@@ -11,3 +11,10 @@ data.short_name = 'KK Vorschau';
 writeFileSync(manifest, JSON.stringify(data));
 const audio = 'src/app/services/audio.service.ts';
 writeFileSync(audio, readFileSync(audio, 'utf8').replaceAll('kklender-music', 'kklender-preview-music'));
+
+// A quick visual check, exclusively in the isolated demo build.
+const balloon = 'src/app/balloon-gift/balloon-gift.ts';
+const balloonSource = readFileSync(balloon, 'utf8');
+const firstWait = 'this.schedule(20000 + Math.random() * 10000);';
+if (!balloonSource.includes(firstWait)) throw new Error('Preview balloon timing hook missing');
+writeFileSync(balloon, balloonSource.replace(firstWait, "this.schedule(new URLSearchParams(this.document.location?.search ?? '').get('gift') === '1' ? 1000 : 20000 + Math.random() * 10000);"));
