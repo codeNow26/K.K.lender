@@ -12,7 +12,7 @@ export class AudioService implements OnDestroy {
   private readonly tracks: Record<Music, HTMLAudioElement> = {
     menu: this.createAudio('Music/Menu-Music.mp3', 0.12, true),
     event: this.createAudio('Music/Bubblegum.mp3', 0.07, true),
-    background: this.createAudio('Music/Background-Music.m4a', 0.035, true),
+    background: this.createAudio('Music/Background-Music.m4a?v=16bff387', 0.035, true),
   };
   private readonly clicks = [1, 2, 3].map((number) =>
     this.createAudio(`Sound-effects/KKLender-click${number}.WAV`, 0.25),

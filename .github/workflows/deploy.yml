@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -38,8 +38,10 @@ jobs:
         run: |
           set -eu
           test -s dist/inselkalender/browser/index.html
-          sudo apt-get update
-          sudo apt-get install -y lftp
+          if ! command -v lftp >/dev/null 2>&1; then
+            sudo apt-get -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/ubuntu.sources -o Dir::Etc::sourceparts=- -o Acquire::Retries=3 update
+            sudo apt-get -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/ubuntu.sources -o Dir::Etc::sourceparts=- -o Acquire::Retries=3 install -y lftp
+          fi
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           echo "access-5020380091.webspace-host.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINbBMvvDjN4IP04VAZlDH42A+HL25ifeIK9CorAvaMA/" >> ~/.ssh/known_hosts
@@ -51,6 +53,19 @@ jobs:
           set net:timeout 30
           set sftp:auto-confirm no
           mirror --reverse --verbose --exclude-glob index.html dist/inselkalender/browser/ ./
+          put dist/inselkalender/browser/.htaccess -o .htaccess
           put dist/inselkalender/browser/index.html -o index.html
           bye
           EOF
+
+      - name: Verify the actual live app and audio
+        run: |
+          set -eu
+          base=https://kklender.philipp-nowotnick.de
+          curl --fail --silent --show-error --retry 3 "$base/?v=${GITHUB_SHA}" -o /tmp/live-index.html
+          cmp dist/inselkalender/browser/index.html /tmp/live-index.html
+          curl --fail --silent --show-error --retry 3 -H 'Cache-Control: no-cache' "$base/" -o /tmp/live-root.html
+          cmp dist/inselkalender/browser/index.html /tmp/live-root.html
+          curl --fail --silent --show-error --retry 3 "$base/Music/Background-Music.m4a?v=16bff387" -o /tmp/live-background.m4a
+          cmp dist/inselkalender/browser/Music/Background-Music.m4a /tmp/live-background.m4a
+          curl --fail --silent --show-error --head "$base/" | grep -i '^cache-control:'
