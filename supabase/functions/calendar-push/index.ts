@@ -14,6 +14,16 @@ function allowedEndpoint(value: string): boolean {
   } catch { return false; }
 }
 
+function formatEventBody(name: string, event: { title: string; date: string; time: string | null; end_time: string | null }): string {
+  const title=event.title.trim().replace(/\s+/g,' ');
+  const [year,month,day]=event.date.split('-');
+  const date=`${day}.${month}.${year}`;
+  const start=event.time?.slice(0,5);
+  const end=event.end_time?.slice(0,5);
+  const time=start ? `${start}${end ? '–'+end : ''} Uhr` : 'Ganztägig';
+  return `${name} hat hinzugefügt:\n${title}\n${date} · ${time}`;
+}
+
 Deno.serve(async req => {
   if (req.method === 'OPTIONS') return new Response(null, { headers });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -48,7 +58,7 @@ Deno.serve(async req => {
     const privateKey = config.vapid_private_key;
     const subject = 'https://kklender.philipp-nowotnick.de';
     if (!publicKey || !privateKey) return json({ ignored: true });
-    const { data: event, error: eventError } = await db.from('events').select('id,created_by').eq('id', payload.record.id).maybeSingle();
+    const { data: event, error: eventError } = await db.from('events').select('id,created_by,title,date,time,end_time').eq('id', payload.record.id).maybeSingle();
     if (eventError) throw eventError;
     if (!event?.created_by) return json({ ignored: true });
     const { data: members, error: memberError } = await db.from('calendar_members').select('user_id,display_name');
@@ -63,11 +73,11 @@ Deno.serve(async req => {
     if (claimError?.code === '23505') return json({ duplicate: true });
     if (claimError) throw claimError;
     webpush.setVapidDetails(subject, publicKey, privateKey);
-    const name = author.display_name === 'Philipp' ? 'Phjelepp' : 'Adrietz';
+    const body = formatEventBody(author.display_name, event);
     const results = await Promise.allSettled((subscriptions ?? []).filter(s => allowedEndpoint(s.endpoint)).map(async s => {
       try {
         await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-          JSON.stringify({ id: event.id, body: name + ' hat einen neuen Inselplan hinzugefügt! 🌿' }),
+          JSON.stringify({ id: event.id, body }),
           { TTL: 3600, timeout: 10000 });
       } catch (error) {
         const status = (error as { statusCode?: number }).statusCode;
