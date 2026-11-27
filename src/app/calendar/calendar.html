@@ -113,7 +113,7 @@
         >
           <div class="event-card__meta">
             <span class="event-card__time">
-              {{ event.time ? event.time.slice(0, 5) + ' Uhr' : 'Ganztägig' }}
+              {{ event.time ? event.time.slice(0, 5) + (event.end_time ? ' – ' + event.end_time.slice(0, 5) : '') + ' Uhr' : 'Ganztägig' }}
             </span>
 
             <span class="event-card__owner"><img [src]="ownerIcons[event.owner]" alt="" width="22" height="22">{{ ownerLabels[event.owner] }}</span>
@@ -245,6 +245,17 @@
             <button type="button" (click)="adjustTime(15)">+15 Min.</button>
           </div>
           <p class="field-hint">Einfach auf Stunde oder Minute tippen.</p>
+          <div class="time-options end-time-options">
+            <button type="button" [attr.aria-pressed]="!!draftEndTime" (click)="setEndTimeEnabled(!draftEndTime)">
+              {{ draftEndTime ? '− Endzeit entfernen' : '+ Endzeit hinzufügen' }}
+            </button>
+          </div>
+          @if (draftEndTime) {
+            <div class="field end-time-field">
+              <label for="event-end-time">Bis</label>
+              <input id="event-end-time" name="end-time" type="time" required [(ngModel)]="draftEndTime" />
+            </div>
+          }
         } @else {
           <p class="field-hint">Ganz entspannt, ohne feste Uhrzeit.</p>
         }

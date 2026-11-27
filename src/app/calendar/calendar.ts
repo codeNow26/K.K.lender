@@ -13,6 +13,7 @@ interface CalendarEvent {
   title: string;
   date: string;
   time: string | null;
+  end_time?: string | null;
   owner: EventOwner;
 }
 
@@ -54,6 +55,7 @@ export class Calendar implements OnInit, OnDestroy {
   draftTitle = '';
   draftDate = '';
   draftTime = '';
+  draftEndTime = '';
   draftOwner: EventOwner = 'Gemeinsam';
 
   ngOnInit(): void {
@@ -158,7 +160,7 @@ export class Calendar implements OnInit, OnDestroy {
       for (let offset = 0; ; offset += pageSize) {
         const { data, error } = await this.supabase.client
           .from('events')
-          .select('id, title, date, time, owner')
+          .select('*')
           .order('id')
           .range(offset, offset + pageSize - 1)
           .returns<CalendarEvent[]>();
@@ -189,6 +191,20 @@ export class Calendar implements OnInit, OnDestroy {
 
   setTimeEnabled(enabled: boolean): void {
     this.draftTime = enabled ? '09:00' : '';
+    if (!enabled) this.draftEndTime = '';
+  }
+
+  setEndTimeEnabled(enabled: boolean): void {
+    this.draftEndTime = enabled ? this.draftTime : '';
+    if (enabled && /^\d{2}:\d{2}$/.test(this.draftTime)) {
+      const [h, m] = this.draftTime.split(':').map(Number);
+      const total = Math.min(1439, h * 60 + m + 60);
+      this.draftEndTime = `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+    }
+  }
+
+  private normalizeTime(value: string): string {
+    return value.split(':').map(part => part.padStart(2, '0')).join(':');
   }
 
   setTimePart(part: 'hour' | 'minute', value: string): void {
@@ -290,6 +306,7 @@ export class Calendar implements OnInit, OnDestroy {
     this.draftTitle = '';
     this.draftDate = this.toDateKey(this.selectedDate);
     this.draftTime = '';
+    this.draftEndTime = '';
     this.draftOwner = 'Gemeinsam';
 
     this.clearMessages();
@@ -315,6 +332,7 @@ export class Calendar implements OnInit, OnDestroy {
     this.draftTitle = event.title;
     this.draftDate = event.date;
     this.draftTime = event.time?.slice(0, 5) ?? '';
+    this.draftEndTime = event.end_time?.slice(0, 5) ?? '';
     this.draftOwner = event.owner;
 
     this.clearMessages();
@@ -362,10 +380,19 @@ export class Calendar implements OnInit, OnDestroy {
       return;
     }
 
+    const start = this.draftTime ? this.normalizeTime(this.draftTime) : null;
+    const end = this.draftEndTime ? this.normalizeTime(this.draftEndTime) : null;
+    if (end && (!start || !/^([01]?\d|2[0-3]):([0-5]?\d)$/.test(this.draftEndTime) || end <= start)) {
+      this.saveError.set('Die Endzeit muss am selben Tag nach der Startzeit liegen.');
+      return;
+    }
+
+    const existing = this.events().find(event => event.id === editingId);
     const values = {
       title,
       date: this.draftDate,
-      time: this.draftTime ? this.draftTime.split(':').map((part) => part.padStart(2, '0')).join(':') : null,
+      time: start,
+      ...(end || existing?.end_time !== undefined ? { end_time: end } : {}),
       owner: this.draftOwner,
     };
 
@@ -377,7 +404,7 @@ export class Calendar implements OnInit, OnDestroy {
         : this.supabase.client.from('events').insert(values);
 
       const { data, error } = await query
-        .select('id, title, date, time, owner')
+        .select('*')
         .maybeSingle<CalendarEvent>();
 
       if (this.isDestroyed) return;
@@ -406,7 +433,9 @@ export class Calendar implements OnInit, OnDestroy {
     } catch (error: unknown) {
       if (this.isDestroyed) return;
 
-      if (
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'PGRST204') {
+        this.saveError.set('Die Endzeit ist in dieser Datenbank noch nicht freigeschaltet.');
+      } else if (
         typeof error === 'object' &&
         error !== null &&
         'code' in error &&

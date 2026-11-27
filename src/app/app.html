@@ -51,6 +51,11 @@
     </section>
   } @else if (auth.session()) {
     <div class="account-bar">
+      @if (push.supported) {
+        <button type="button" class="button-secondary" [disabled]="push.busy() || isBusy()" [attr.aria-pressed]="push.enabled()" (click)="push.toggle()">
+          {{ push.enabled() ? "🔔 Inselpost an" : "🔕 Inselpost aus" }}
+        </button>
+      }
 
       <button
         type="button"
@@ -62,6 +67,9 @@
       </button>
     </div>
 
+    @if (push.message()) {
+      <p class="error-message" role="status">{{ push.message() }}</p>
+    }
     @if (errorMessage()) {
       <p class="error-message" role="alert">{{ errorMessage() }}</p>
     }

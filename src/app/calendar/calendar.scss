@@ -734,3 +734,7 @@ button {
 .event-card__owner { display: inline-flex; align-items: center; gap: 5px; }
 .event-card__owner img { object-fit: contain; flex-shrink: 0; }
 .owner-option__card img { width: 36px; height: 36px; }
+
+.end-time-options { margin-top: 12px; }
+.end-time-field { max-width: 180px; margin: 12px auto 0; }
+.end-time-field input { text-align: center; }
