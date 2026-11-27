@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -13,6 +13,7 @@ interface CalendarEvent {
   title: string;
   date: string;
   time: string | null;
+  end_time?: string | null;
   owner: EventOwner;
 }
 
@@ -45,15 +46,21 @@ export class Calendar implements OnInit, OnDestroy {
   readonly successMessage = signal('');
   readonly syncStatus = signal('Live-Verbindung wird aufgebaut …');
 
+  @ViewChild('monthGrid') private monthGrid?: ElementRef<HTMLDivElement>;
+  private monthAnimation?: Animation;
+
   displayedMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
   selectedDate = new Date();
-  isFormOpen = false;
+  readonly formOpen = signal(false);
+  get isFormOpen(): boolean { return this.formOpen(); }
+  set isFormOpen(value: boolean) { this.formOpen.set(value); }
   editingId: string | null = null;
 
   draftTitle = '';
   draftDate = '';
   draftTime = '';
+  draftEndTime = '';
   draftOwner: EventOwner = 'Gemeinsam';
 
   ngOnInit(): void {
@@ -63,6 +70,7 @@ export class Calendar implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.isDestroyed = true;
+    this.monthAnimation?.cancel();
     this.audio.setNewEvent(false);
     this.animalese.stop();
 
@@ -158,7 +166,7 @@ export class Calendar implements OnInit, OnDestroy {
       for (let offset = 0; ; offset += pageSize) {
         const { data, error } = await this.supabase.client
           .from('events')
-          .select('id, title, date, time, owner')
+          .select('*')
           .order('id')
           .range(offset, offset + pageSize - 1)
           .returns<CalendarEvent[]>();
@@ -189,18 +197,37 @@ export class Calendar implements OnInit, OnDestroy {
 
   setTimeEnabled(enabled: boolean): void {
     this.draftTime = enabled ? '09:00' : '';
+    if (!enabled) this.draftEndTime = '';
   }
 
-  setTimePart(part: 'hour' | 'minute', value: string): void {
-    const [hour, minute] = this.draftTime.split(':');
-    this.draftTime = part === 'hour' ? `${value}:${minute}` : `${hour}:${value}`;
+  setEndTimeEnabled(enabled: boolean): void {
+    this.draftEndTime = enabled ? this.draftTime : '';
+    if (enabled && /^\d{2}:\d{2}$/.test(this.draftTime)) {
+      const [h, m] = this.draftTime.split(':').map(Number);
+      const total = Math.min(1439, h * 60 + m + 60);
+      this.draftEndTime = `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+    }
   }
 
-  adjustTime(minutes: number): void {
-    const value = /^([01]?\d|2[0-3]):([0-5]?\d)$/.test(this.draftTime) ? this.draftTime : '09:00';
+  private normalizeTime(value: string): string {
+    return value.split(':').map(part => part.padStart(2, '0')).join(':');
+  }
+
+  setTimePart(part: 'hour' | 'minute', value: string, end = false): void {
+    const [hour, minute] = (end ? this.draftEndTime : this.draftTime).split(':');
+    const next = part === 'hour' ? `${value}:${minute}` : `${hour}:${value}`;
+    if (end) this.draftEndTime = next;
+    else this.draftTime = next;
+  }
+
+  adjustTime(minutes: number, end = false): void {
+    const draft = end ? this.draftEndTime : this.draftTime;
+    const value = /^([01]?\d|2[0-3]):([0-5]?\d)$/.test(draft) ? draft : '09:00';
     const [hour, minute] = value.split(':').map(Number);
     const total = ((hour * 60 + minute + minutes) % 1440 + 1440) % 1440;
-    this.draftTime = `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+    const next = `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+    if (end) this.draftEndTime = next;
+    else this.draftTime = next;
   }
 
   changeMonth(direction: number): void {
@@ -209,14 +236,30 @@ export class Calendar implements OnInit, OnDestroy {
       this.displayedMonth.getMonth() + direction,
       1,
     );
+    this.animateMonth(direction);
   }
 
   goToToday(): void {
     const today = new Date();
-
-    this.displayedMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
+    const nextMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const direction = Math.sign(nextMonth.getTime() - this.displayedMonth.getTime());
+    this.displayedMonth = nextMonth;
     this.selectedDate = today;
+    if (direction) this.animateMonth(direction);
+  }
+
+  private animateMonth(direction: number): void {
+    this.monthAnimation?.cancel();
+    const grid = this.monthGrid?.nativeElement;
+    if (!grid || typeof grid.animate !== 'function' ||
+        this.document.defaultView?.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    this.monthAnimation = grid.animate(
+      [
+        { opacity: 0.65, transform: `translateX(${Math.sign(direction) * 10}px)` },
+        { opacity: 1, transform: 'translateX(0)' },
+      ],
+      { duration: 240, easing: 'cubic-bezier(0.2, 0.75, 0.25, 1)' },
+    );
   }
 
   selectDay(day: number): void {
@@ -290,6 +333,7 @@ export class Calendar implements OnInit, OnDestroy {
     this.draftTitle = '';
     this.draftDate = this.toDateKey(this.selectedDate);
     this.draftTime = '';
+    this.draftEndTime = '';
     this.draftOwner = 'Gemeinsam';
 
     this.clearMessages();
@@ -315,6 +359,7 @@ export class Calendar implements OnInit, OnDestroy {
     this.draftTitle = event.title;
     this.draftDate = event.date;
     this.draftTime = event.time?.slice(0, 5) ?? '';
+    this.draftEndTime = event.end_time?.slice(0, 5) ?? '';
     this.draftOwner = event.owner;
 
     this.clearMessages();
@@ -362,10 +407,19 @@ export class Calendar implements OnInit, OnDestroy {
       return;
     }
 
+    const start = this.draftTime ? this.normalizeTime(this.draftTime) : null;
+    const end = this.draftEndTime ? this.normalizeTime(this.draftEndTime) : null;
+    if (end && (!start || !/^([01]?\d|2[0-3]):([0-5]?\d)$/.test(this.draftEndTime) || end <= start)) {
+      this.saveError.set('Die Endzeit muss am selben Tag nach der Startzeit liegen.');
+      return;
+    }
+
+    const existing = this.events().find(event => event.id === editingId);
     const values = {
       title,
       date: this.draftDate,
-      time: this.draftTime ? this.draftTime.split(':').map((part) => part.padStart(2, '0')).join(':') : null,
+      time: start,
+      ...(end || existing?.end_time !== undefined ? { end_time: end } : {}),
       owner: this.draftOwner,
     };
 
@@ -377,7 +431,7 @@ export class Calendar implements OnInit, OnDestroy {
         : this.supabase.client.from('events').insert(values);
 
       const { data, error } = await query
-        .select('id, title, date, time, owner')
+        .select('*')
         .maybeSingle<CalendarEvent>();
 
       if (this.isDestroyed) return;
@@ -406,7 +460,9 @@ export class Calendar implements OnInit, OnDestroy {
     } catch (error: unknown) {
       if (this.isDestroyed) return;
 
-      if (
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'PGRST204') {
+        this.saveError.set('Die Endzeit ist in dieser Datenbank noch nicht freigeschaltet.');
+      } else if (
         typeof error === 'object' &&
         error !== null &&
         'code' in error &&

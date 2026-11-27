@@ -4,6 +4,8 @@ import { Calendar } from './calendar/calendar';
 import { AnimaleseService } from './services/animalese.service';
 import { AudioService } from './services/audio.service';
 import { SupabaseService } from './services/supabase.service';
+import { PushService } from './services/push.service';
+import { BalloonGift } from './balloon-gift/balloon-gift';
 
 interface InstallPromptEvent extends Event {
   prompt(): Promise<{ outcome: 'accepted' | 'dismissed' }>;
@@ -11,7 +13,7 @@ interface InstallPromptEvent extends Event {
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, Calendar],
+  imports: [FormsModule, Calendar, BalloonGift],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -19,6 +21,7 @@ export class App {
   readonly auth = inject(SupabaseService);
   readonly audio = inject(AudioService);
   readonly animalese = inject(AnimaleseService);
+  readonly push = inject(PushService);
 
   private installPrompt: InstallPromptEvent | null = null;
   readonly installRequested = signal(
@@ -85,6 +88,8 @@ export class App {
 
   constructor() {
     effect(() => {
+      const user = this.auth.session()?.user.id;
+      if (user) void this.push.refresh(user);
       this.audio.setScreen(
         this.auth.isInitializing() ? null : this.auth.session() ? 'calendar' : 'login',
       );
@@ -135,6 +140,7 @@ export class App {
     this.errorMessage.set('');
 
     try {
+      await this.push.disable();
       await this.auth.signOut();
       this.password = '';
     } catch {

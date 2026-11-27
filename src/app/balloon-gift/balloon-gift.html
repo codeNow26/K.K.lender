@@ -1,0 +1,48 @@
+@if (gift(); as floating) {
+  <div class="flight" [class.flight--reverse]="floating.reverse" (animationend)="onFlightAnimationEnd($event)">
+    <button class="balloon" type="button" aria-label="Fliegendes Inselgeschenk fangen" (click)="catchGift()"
+      [style.--balloon-light]="floating.palette.light" [style.--balloon-mid]="floating.palette.mid" [style.--balloon-dark]="floating.palette.dark">
+      <svg viewBox="0 0 84 120" aria-hidden="true" focusable="false">
+        <defs>
+          <radialGradient id="island-balloon-shading" cx="32%" cy="24%" r="80%">
+            <stop offset="0%" stop-color="var(--balloon-light)" />
+            <stop offset="46%" stop-color="var(--balloon-mid)" />
+            <stop offset="100%" stop-color="var(--balloon-dark)" />
+          </radialGradient>
+          <linearGradient id="island-gift-paper" x2="0.85" y2="1">
+            <stop stop-color="#fffdf3" /><stop offset="1" stop-color="#eee9dc" />
+          </linearGradient>
+          <linearGradient id="island-gift-ribbon" x2="0.85" y2="1">
+            <stop stop-color="#f77561" /><stop offset=".45" stop-color="#dd4035" /><stop offset="1" stop-color="#b92b2b" />
+          </linearGradient>
+        </defs>
+        <ellipse cx="42" cy="33" rx="26" ry="29" fill="url(#island-balloon-shading)" />
+        <ellipse cx="32" cy="20" rx="7" ry="10" transform="rotate(32 32 20)" fill="#fff" opacity=".16" />
+        <path d="M42 60 L38 67 Q42 69 46 67 Z" fill="var(--balloon-dark)" />
+        <path d="M42 67 Q40 73 42 79" fill="none" stroke="#ab9b78" stroke-width="1.5" stroke-linecap="round" />
+        <g class="parcel">
+          <path d="M23 86 L46 79 L63 88 L63 110 L42 118 L23 107 Z" fill="#d4cbb9" />
+          <path d="M23 86 L42 94 L42 118 L23 107 Z" fill="url(#island-gift-paper)" />
+          <path d="M42 94 L63 88 L63 110 L42 118 Z" fill="#dfdacd" />
+          <path d="M23 86 L45 79 L63 88 L42 96 Z" fill="#fffdf5" />
+          <path d="M30 89 L35 91 L35 112 L30 109 Z M49 94 L55 92 L55 113 L49 115 Z" fill="url(#island-gift-ribbon)" />
+          <path d="M30 84 L35 82 L55 90 L49 92 Z M36 91 L56 84 L61 87 L42 94 Z" fill="#e94b3e" />
+          <path d="M43 82 C30 83 23 73 30 70 C36 66 40 77 43 82 Z" fill="url(#island-gift-ribbon)" />
+          <path d="M43 82 C48 66 58 68 59 74 C60 80 50 84 43 82 Z" fill="url(#island-gift-ribbon)" />
+          <path d="M43 82 Q38 74 31 73 M43 82 Q51 74 56 74" fill="none" stroke="#a92b28" stroke-width="1.8" opacity=".65" />
+          <path d="M40 81 Q34 85 32 90 L39 88 L44 83 L48 90 L54 89 Q48 85 46 81 Z" fill="#db4239" />
+          <ellipse cx="43" cy="82" rx="4" ry="3" fill="#ef6252" />
+        </g>
+      </svg>
+    </button>
+  </div>
+}
+<div class="reward-area" role="status" aria-live="polite">
+  @if (reward()) {
+    <div class="reward">
+      <span class="reward__spark" aria-hidden="true">✦</span>
+      <span><strong>Inselgeschenk gefangen!</strong><br />{{ reward() }}</span>
+      <span class="reward__spark" aria-hidden="true">✧</span>
+    </div>
+  }
+</div>

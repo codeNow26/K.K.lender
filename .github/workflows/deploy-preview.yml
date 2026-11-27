@@ -1,0 +1,83 @@
+name: Deploy isolated calendar preview
+
+on:
+  push:
+    branches: [feature/calendar-upgrades]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kklender-isolated-preview
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/feature/calendar-upgrades'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Fetch matching New Horizons portrait icons
+        run: |
+          mkdir -p public/images
+          curl --fail --silent --show-error --location --retry 3 --max-time 45 'https://soopool.art/img/infoacnh/Neighbor/squ17.png' -o public/images/huschke-head.png
+          curl --fail --silent --show-error --location --retry 3 --max-time 45 'https://soopool.art/img/infoacnh/Neighbor/squ21.png' -o public/images/ione-head.png
+          python -c "from pathlib import Path; assert all(p.read_bytes().startswith(bytes.fromhex('89504e470d0a1a0a')) for p in map(Path, ['public/images/huschke-head.png', 'public/images/ione-head.png']))"
+      - name: Prepare local-only demo data
+        run: node scripts/prepare-calendar-preview.mjs
+      - run: npm run build -- --base-href /preview/calendar-upgrades/
+      - name: Upload Angular build via SFTP
+        env:
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_USER: ${{ secrets.SFTP_USER }}
+          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+        run: |
+          set -eu
+          test -s dist/inselkalender/browser/index.html
+          if ! command -v lftp >/dev/null 2>&1; then
+            sudo apt-get -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/ubuntu.sources -o Dir::Etc::sourceparts=- -o Acquire::Retries=3 update
+            sudo apt-get -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/ubuntu.sources -o Dir::Etc::sourceparts=- -o Acquire::Retries=3 install -y lftp
+          fi
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "access-5020380091.webspace-host.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINbBMvvDjN4IP04VAZlDH42A+HL25ifeIK9CorAvaMA/" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+          lftp -u "$SFTP_USER","$SFTP_PASSWORD" -p 22 "sftp://$SFTP_HOST" <<'EOF'
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 30
+          set sftp:auto-confirm no
+          set cmd:fail-exit no
+          mkdir -p preview/calendar-upgrades
+          set cmd:fail-exit yes
+          cd preview/calendar-upgrades
+          mirror --reverse --verbose --exclude-glob index.html dist/inselkalender/browser/ ./
+          put dist/inselkalender/browser/index.html -o index.html
+          bye
+          EOF
+      - name: Verify published preview
+        run: |
+          set -eu
+          curl --fail --silent --show-error --retry 3 "https://kklender.philipp-nowotnick.de/preview/calendar-upgrades/index.html?v=${GITHUB_SHA}" -o /tmp/preview-index.html
+          cmp dist/inselkalender/browser/index.html /tmp/preview-index.html
+      - name: Verify balloon in real desktop and mobile browsers
+        run: |
+          mkdir -p "$RUNNER_TEMP/balloon-check"
+          npm install --prefix "$RUNNER_TEMP/balloon-check" --no-save --package-lock=false playwright-core
+          cp scripts/check-balloon-preview.mjs "$RUNNER_TEMP/balloon-check/"
+          node "$RUNNER_TEMP/balloon-check/check-balloon-preview.mjs"
+      - name: Keep browser test screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: balloon-browser-check
+          path: balloon-*.png
+          if-no-files-found: ignore

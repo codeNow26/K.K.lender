@@ -734,3 +734,6 @@ button {
 .event-card__owner { display: inline-flex; align-items: center; gap: 5px; }
 .event-card__owner img { object-fit: contain; flex-shrink: 0; }
 .owner-option__card img { width: 36px; height: 36px; }
+
+.end-time-options { margin-top: 12px; }
+.time-range-label { margin: 14px 0 -7px; text-align: center; font-weight: 700; color: #277f70; }

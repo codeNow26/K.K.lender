@@ -20,7 +20,7 @@
   </button>
 </div>
 
-<div class="month-grid">
+<div class="month-grid" #monthGrid>
   @for (weekday of weekdays; track weekday) {
     <span class="weekday">{{ weekday }}</span>
   }
@@ -113,7 +113,7 @@
         >
           <div class="event-card__meta">
             <span class="event-card__time">
-              {{ event.time ? event.time.slice(0, 5) + ' Uhr' : 'Ganztägig' }}
+              {{ event.time ? event.time.slice(0, 5) + (event.end_time ? ' – ' + event.end_time.slice(0, 5) : '') + ' Uhr' : 'Ganztägig' }}
             </span>
 
             <span class="event-card__owner"><img [src]="ownerIcons[event.owner]" alt="" width="22" height="22">{{ ownerLabels[event.owner] }}</span>
@@ -231,6 +231,7 @@
           <button type="button" [attr.aria-pressed]="!!draftTime" (click)="draftTime || setTimeEnabled(true)">◷ Mit Uhrzeit</button>
         </div>
         @if (draftTime) {
+          @if (draftEndTime) { <p class="time-range-label">Von</p> }
           <div class="time-clock">
             <label>Stunde
               <input name="time-hour" aria-label="Stunde" type="text" inputmode="numeric" maxlength="2" pattern="([01]?[0-9]|2[0-3])" required [ngModel]="draftTime.split(':')[0]" (ngModelChange)="setTimePart('hour', $event)" />
@@ -245,6 +246,27 @@
             <button type="button" (click)="adjustTime(15)">+15 Min.</button>
           </div>
           <p class="field-hint">Einfach auf Stunde oder Minute tippen.</p>
+          <div class="time-options end-time-options">
+            <button type="button" [attr.aria-pressed]="!!draftEndTime" (click)="setEndTimeEnabled(!draftEndTime)">
+              {{ draftEndTime ? '− Endzeit entfernen' : '+ Endzeit hinzufügen' }}
+            </button>
+          </div>
+          @if (draftEndTime) {
+            <p class="time-range-label">Bis</p>
+            <div class="time-clock">
+              <label>Stunde
+                <input name="end-time-hour" aria-label="Endzeit Stunde" type="text" inputmode="numeric" maxlength="2" pattern="([01]?[0-9]|2[0-3])" required [ngModel]="draftEndTime.split(':')[0]" (ngModelChange)="setTimePart('hour', $event, true)" />
+              </label>
+              <span aria-hidden="true">:</span>
+              <label>Minute
+                <input name="end-time-minute" aria-label="Endzeit Minute" type="text" inputmode="numeric" maxlength="2" pattern="[0-5]?[0-9]" required [ngModel]="draftEndTime.split(':')[1]" (ngModelChange)="setTimePart('minute', $event, true)" />
+              </label>
+            </div>
+            <div class="time-options">
+              <button type="button" aria-label="Endzeit minus 15 Minuten" (click)="adjustTime(-15, true)">−15 Min.</button>
+              <button type="button" aria-label="Endzeit plus 15 Minuten" (click)="adjustTime(15, true)">+15 Min.</button>
+            </div>
+          }
         } @else {
           <p class="field-hint">Ganz entspannt, ohne feste Uhrzeit.</p>
         }

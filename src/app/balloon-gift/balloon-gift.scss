@@ -1,0 +1,68 @@
+:host {
+  display: block;
+  position: fixed;
+  top: clamp(72px, 15dvh, 150px);
+  left: 0;
+  width: 100%;
+  height: 120px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1000;
+}
+.flight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 72px;
+  animation: drift 23s linear both;
+  pointer-events: none;
+  will-change: transform;
+}
+.flight--reverse { animation-direction: reverse; }
+.balloon {
+  display: block;
+  width: 72px;
+  height: 104px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  animation: bob 3.2s ease-in-out infinite;
+  filter: drop-shadow(0 3px 3px #57593a25);
+}
+.balloon:focus-visible { outline: 2px dashed #187e70; border-radius: 32px; }
+.balloon svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.parcel { transform-origin: 42px 72px; animation: sway 2.8s ease-in-out infinite; }
+.reward-area { position: absolute; inset: 4px 10px auto; display: grid; justify-items: center; }
+.reward {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+  padding: 12px 18px;
+  border: 2px solid #d5cda4;
+  border-radius: 22px;
+  background: #fff9df;
+  color: #53674c;
+  box-shadow: 0 4px 0 #b9b69555;
+  font-size: 13px;
+  text-align: center;
+  animation: reward-in 280ms ease-out both;
+}
+.reward strong { color: #187e70; }
+.reward__spark { font-size: 22px; color: #d3a445; }
+@keyframes drift { from { transform: translateX(-16px); } to { transform: translateX(calc(100vw - 56px)); } }
+@keyframes bob { 0%, 100% { transform: translateY(3px) rotate(-3deg); } 50% { transform: translateY(-2px) rotate(3deg); } }
+@keyframes sway { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+@keyframes reward-in { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (max-width: 520px) {
+  :host { height: 88px; }
+  .flight, .balloon { width: 58px; }
+  .balloon { height: 84px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flight { left: auto; right: 12px; animation: none; }
+  .balloon, .parcel, .reward { animation: none; }
+}

@@ -51,6 +51,11 @@
     </section>
   } @else if (auth.session()) {
     <div class="account-bar">
+      @if (push.supported) {
+        <button type="button" class="button-secondary" [disabled]="push.busy() || isBusy()" [attr.aria-pressed]="push.enabled()" (click)="push.toggle()">
+          {{ push.enabled() ? "🔔 Inselpost an" : "🔕 Inselpost aus" }}
+        </button>
+      }
 
       <button
         type="button"
@@ -62,6 +67,9 @@
       </button>
     </div>
 
+    @if (push.message()) {
+      <p class="error-message" role="status">{{ push.message() }}</p>
+    }
     @if (errorMessage()) {
       <p class="error-message" role="alert">{{ errorMessage() }}</p>
     }
@@ -81,6 +89,8 @@
 
       <app-calendar #calendar />
     </section>
+
+    <app-balloon-gift />
 
     <footer class="planner__footer">
       <img src="images/leaf.webp" alt="" width="15" height="15" />

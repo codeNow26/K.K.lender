@@ -73,6 +73,36 @@ describe('Calendar audio lifecycle', () => {
     expect(calendar.draftTime).toBe('');
   });
 
+  it('offers an optional end time and clears it for all-day events', () => {
+    calendar.draftTime = '15:00';
+    calendar.setEndTimeEnabled(true);
+    expect(calendar.draftEndTime).toBe('16:00');
+    calendar.setTimeEnabled(false);
+    expect(calendar.draftEndTime).toBe('');
+  });
+
+  it('edits end time independently of the start time', () => {
+    calendar.draftTime = '15:00';
+    calendar.setEndTimeEnabled(true);
+    calendar.setTimePart('hour', '17', true);
+    calendar.setTimePart('minute', '30', true);
+    calendar.adjustTime(15, true);
+    expect(calendar.draftEndTime).toBe('17:45');
+    calendar.adjustTime(-15, true);
+    expect(calendar.draftEndTime).toBe('17:30');
+    expect(calendar.draftTime).toBe('15:00');
+  });
+
+  it('rejects a range ending before or at the start', async () => {
+    calendar.openNewEvent();
+    calendar.draftTitle = 'Inselbesuch';
+    calendar.draftTime = '15:00';
+    calendar.draftEndTime = '14:00';
+    await calendar.saveEvent();
+    expect(result).not.toHaveBeenCalled();
+    expect(calendar.saveError()).toContain('Endzeit');
+  });
+
   it('rejects incomplete or invalid time instead of saving an all-day event', async () => {
     calendar.openNewEvent();
     calendar.draftTitle = 'Inselbesuch';
