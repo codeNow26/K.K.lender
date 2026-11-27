@@ -17,12 +17,19 @@ try {
     const season = month >= 2 && month <= 4 ? 'spring' : month >= 5 && month <= 7 ? 'summer' : month >= 8 && month <= 10 ? 'autumn' : 'winter';
     assert.equal(await seasonal.getAttribute('data-season'), season);
     assert.equal(await seasonal.evaluate(el => getComputedStyle(el).pointerEvents), 'none');
+    const particles = await seasonal.locator('.particle').evaluateAll(elements => elements.filter(el => {
+      const r = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      return style.display !== 'none' && Number(style.opacity) > .25 && r.width >= 10 && r.bottom > 0 && r.top < innerHeight;
+    }).length);
+    assert.ok(particles >= 5, name + ': too few visible seasonal particles: ' + particles);
+    await page.screenshot({ path: 'balloon-' + name + '-seasonal.png' });
     const monthLabel = page.locator('.month-navigation h3');
     const before = await monthLabel.textContent();
     await page.getByRole('button', { name: 'Nächster Monat' }).click();
-    assert.notEqual(await monthLabel.textContent(), before);
+    await page.waitForFunction(previous => document.querySelector('.month-navigation h3')?.textContent !== previous, before);
     await page.getByRole('button', { name: 'Vorheriger Monat' }).click();
-    assert.equal(await monthLabel.textContent(), before);
+    await page.waitForFunction(previous => document.querySelector('.month-navigation h3')?.textContent === previous, before);
     const balloon = page.getByRole('button', { name: 'Fliegendes Inselgeschenk fangen' });
     const openEditor = () => page.getByRole('button', { name: 'Inselereignis', exact: true }).click();
     const saveEditor = async () => {
