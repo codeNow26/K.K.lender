@@ -25,6 +25,14 @@ describe('Calendar audio lifecycle', () => {
     calendar.isLoading.set(false);
   });
 
+  it('keeps the existing draft when the header add button is tapped again', () => {
+    calendar.openNewEvent();
+    calendar.draftTitle = 'Nicht verwerfen';
+    calendar.openNewEvent();
+    expect(calendar.isFormOpen).toBe(true);
+    expect(calendar.draftTitle).toBe('Nicht verwerfen');
+  });
+
   it('starts for a new event and stops on cancel or component destruction', () => {
     calendar.openNewEvent();
     expect(audio.setNewEvent).toHaveBeenLastCalledWith(true);

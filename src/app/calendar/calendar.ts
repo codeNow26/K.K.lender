@@ -48,6 +48,23 @@ export class Calendar implements OnInit, OnDestroy {
 
   @ViewChild('monthGrid') private monthGrid?: ElementRef<HTMLDivElement>;
   private monthAnimation?: Animation;
+  private eventFormElement?: HTMLElement;
+
+  @ViewChild('eventFormSection')
+  set eventFormSection(ref: ElementRef<HTMLElement> | undefined) {
+    this.eventFormElement = ref?.nativeElement;
+    if (ref) this.scrollToEventForm();
+  }
+
+  private scrollToEventForm(): void {
+    const element = this.eventFormElement;
+    const win = this.document.defaultView;
+    if (!element || !win) return;
+    win.requestAnimationFrame(() => {
+      if (!element.isConnected || !this.isFormOpen || this.isDestroyed) return;
+      element.scrollIntoView?.({ block: 'start', behavior: win.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    });
+  }
 
   displayedMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
@@ -327,7 +344,11 @@ export class Calendar implements OnInit, OnDestroy {
   }
 
   openNewEvent(): void {
-    if (this.isBusy || this.isFormOpen) return;
+    if (this.isFormOpen) {
+      this.scrollToEventForm();
+      return;
+    }
+    if (this.isBusy) return;
 
     this.editingId = null;
     this.draftTitle = '';
@@ -364,6 +385,7 @@ export class Calendar implements OnInit, OnDestroy {
 
     this.clearMessages();
     this.isFormOpen = true;
+    if (this.eventFormElement) this.scrollToEventForm();
   }
 
   closeForm(): void {
