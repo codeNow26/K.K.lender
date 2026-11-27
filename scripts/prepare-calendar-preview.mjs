@@ -18,8 +18,3 @@ const balloonSource = readFileSync(balloon, 'utf8');
 const firstWait = 'this.schedule(20000 + Math.random() * 10000);';
 if (!balloonSource.includes(firstWait)) throw new Error('Preview balloon timing hook missing');
 writeFileSync(balloon, balloonSource.replace(firstWait, "this.schedule(new URLSearchParams(this.document.location?.search ?? '').get('gift') === '1' ? 1000 : 20000 + Math.random() * 10000);"));
-
-// Allow all four seasons to be inspected in the demo only.
-const seasonFile = 'src/app/seasonal-background/seasonal-background.ts';
-const seasonSource = readFileSync(seasonFile, 'utf8');
-writeFileSync(seasonFile, seasonSource.replace('  const month = new Date().getMonth();', "  const preview = new URLSearchParams(location.search).get('season');\n  if (preview === 'spring' || preview === 'summer' || preview === 'autumn' || preview === 'winter') return preview;\n  const month = new Date().getMonth();"));
