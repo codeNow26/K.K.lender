@@ -19,15 +19,35 @@ Deno.serve(async req => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
   try {
     const payload = await req.json();
-    const publicKey = Deno.env.get('VAPID_PUBLIC_KEY');
-    if (payload.action === 'key') return publicKey ? json({ publicKey }) : json({ error: 'Not configured' }, 503);
-    const secret = Deno.env.get('CALENDAR_WEBHOOK_SECRET');
-    if (!secret || req.headers.get('x-calendar-webhook-secret') !== secret) return json({ error: 'Unauthorized' }, 401);
-    if (payload.type !== 'INSERT' || payload.table !== 'events' || payload.schema !== 'public' || !payload.record?.id) return json({ ignored: true });
-    const privateKey = Deno.env.get('VAPID_PRIVATE_KEY');
-    const subject = Deno.env.get('VAPID_SUBJECT');
-    if (!publicKey || !privateKey || !subject) return json({ error: 'Not configured' }, 503);
     const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
+    const readConfig = async () => {
+      const { data, error } = await db.from('calendar_push_config').select('webhook_secret,vapid_public_key,vapid_private_key').eq('id', 1).single();
+      if (error || !data) throw Error('Configuration unavailable');
+      return data;
+    };
+    let config = await readConfig();
+    if (payload.action === 'key') {
+      const token = req.headers.get('authorization')?.replace(/^Bearer /i, '');
+      if (!token) return json({ error: 'Unauthorized' }, 401);
+      const { data: { user }, error } = await db.auth.getUser(token);
+      if (error || !user) return json({ error: 'Unauthorized' }, 401);
+      const { data: member } = await db.from('calendar_members').select('user_id').eq('user_id', user.id).maybeSingle();
+      if (!member) return json({ error: 'Forbidden' }, 403);
+      if (!config.vapid_public_key) {
+        const keys = webpush.generateVAPIDKeys();
+        const { error: saveError } = await db.from('calendar_push_config').update({ vapid_public_key: keys.publicKey, vapid_private_key: keys.privateKey }).eq('id', 1).is('vapid_public_key', null);
+        if (saveError) throw saveError;
+        config = await readConfig();
+      }
+      return json({ publicKey: config.vapid_public_key });
+    }
+    const secret = req.headers.get('x-calendar-webhook-secret');
+    if (!secret || secret !== config.webhook_secret) return json({ error: 'Unauthorized' }, 401);
+    if (payload.type !== 'INSERT' || payload.table !== 'events' || payload.schema !== 'public' || !payload.record?.id) return json({ ignored: true });
+    const publicKey = config.vapid_public_key;
+    const privateKey = config.vapid_private_key;
+    const subject = 'https://kklender.philipp-nowotnick.de';
+    if (!publicKey || !privateKey) return json({ ignored: true });
     const { data: event, error: eventError } = await db.from('events').select('id,created_by').eq('id', payload.record.id).maybeSingle();
     if (eventError) throw eventError;
     if (!event?.created_by) return json({ ignored: true });
