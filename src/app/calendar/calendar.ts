@@ -207,16 +207,21 @@ export class Calendar implements OnInit, OnDestroy {
     return value.split(':').map(part => part.padStart(2, '0')).join(':');
   }
 
-  setTimePart(part: 'hour' | 'minute', value: string): void {
-    const [hour, minute] = this.draftTime.split(':');
-    this.draftTime = part === 'hour' ? `${value}:${minute}` : `${hour}:${value}`;
+  setTimePart(part: 'hour' | 'minute', value: string, end = false): void {
+    const [hour, minute] = (end ? this.draftEndTime : this.draftTime).split(':');
+    const next = part === 'hour' ? `${value}:${minute}` : `${hour}:${value}`;
+    if (end) this.draftEndTime = next;
+    else this.draftTime = next;
   }
 
-  adjustTime(minutes: number): void {
-    const value = /^([01]?\d|2[0-3]):([0-5]?\d)$/.test(this.draftTime) ? this.draftTime : '09:00';
+  adjustTime(minutes: number, end = false): void {
+    const draft = end ? this.draftEndTime : this.draftTime;
+    const value = /^([01]?\d|2[0-3]):([0-5]?\d)$/.test(draft) ? draft : '09:00';
     const [hour, minute] = value.split(':').map(Number);
     const total = ((hour * 60 + minute + minutes) % 1440 + 1440) % 1440;
-    this.draftTime = `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+    const next = `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+    if (end) this.draftEndTime = next;
+    else this.draftTime = next;
   }
 
   changeMonth(direction: number): void {

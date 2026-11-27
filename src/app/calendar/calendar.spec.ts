@@ -81,6 +81,18 @@ describe('Calendar audio lifecycle', () => {
     expect(calendar.draftEndTime).toBe('');
   });
 
+  it('edits end time independently of the start time', () => {
+    calendar.draftTime = '15:00';
+    calendar.setEndTimeEnabled(true);
+    calendar.setTimePart('hour', '17', true);
+    calendar.setTimePart('minute', '30', true);
+    calendar.adjustTime(15, true);
+    expect(calendar.draftEndTime).toBe('17:45');
+    calendar.adjustTime(-15, true);
+    expect(calendar.draftEndTime).toBe('17:30');
+    expect(calendar.draftTime).toBe('15:00');
+  });
+
   it('rejects a range ending before or at the start', async () => {
     calendar.openNewEvent();
     calendar.draftTitle = 'Inselbesuch';
