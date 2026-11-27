@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, HostListener, Input, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { AudioService } from '../services/audio.service';
 
 const BALLOONS = [
@@ -34,13 +34,6 @@ export class BalloonGift implements OnInit, OnDestroy {
   private lastReward = -1;
   private dueAt = 0;
   private initialized = false;
-  private editorOpen = false;
-
-  @Input() set paused(value: boolean) {
-    if (this.editorOpen === value) return;
-    this.editorOpen = value;
-    if (this.initialized) this.updateAvailability();
-  }
 
   ngOnInit(): void {
     this.initialized = true;
@@ -58,7 +51,7 @@ export class BalloonGift implements OnInit, OnDestroy {
   }
 
   private get unavailable(): boolean {
-    return this.editorOpen || this.document.hidden;
+    return this.document.hidden;
   }
 
   private updateAvailability(): void {

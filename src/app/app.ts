@@ -5,6 +5,7 @@ import { AnimaleseService } from './services/animalese.service';
 import { AudioService } from './services/audio.service';
 import { SupabaseService } from './services/supabase.service';
 import { PushService } from './services/push.service';
+import { BalloonGift } from './balloon-gift/balloon-gift';
 
 interface InstallPromptEvent extends Event {
   prompt(): Promise<{ outcome: 'accepted' | 'dismissed' }>;
@@ -12,7 +13,7 @@ interface InstallPromptEvent extends Event {
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, Calendar],
+  imports: [FormsModule, Calendar, BalloonGift],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

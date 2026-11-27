@@ -41,12 +41,14 @@ describe('Balloon gift timing', () => {
     expect(gift.gift()).not.toBeNull();
   });
 
-  it('does not restart the first wait when the editor closes', () => {
+  it('keeps the first deadline across a tab switch', () => {
     vi.advanceTimersByTime(20000);
-    gift.paused = true;
+    documentState.hidden = true;
+    gift.onVisibility();
     vi.advanceTimersByTime(10000);
     expect(gift.gift()).toBeNull();
-    gift.paused = false;
+    documentState.hidden = false;
+    gift.onVisibility();
     vi.advanceTimersByTime(1);
     expect(gift.gift()).not.toBeNull();
   });
@@ -66,12 +68,14 @@ describe('Balloon gift timing', () => {
     expect(gift.gift()).not.toBeNull();
   });
 
-  it('replays a flight interrupted by an open editor', () => {
+  it('replays a flight interrupted by a hidden tab', () => {
     vi.advanceTimersByTime(25000);
-    gift.paused = true;
+    documentState.hidden = true;
+    gift.onVisibility();
     expect(gift.gift()).toBeNull();
     vi.advanceTimersByTime(10000);
-    gift.paused = false;
+    documentState.hidden = false;
+    gift.onVisibility();
     vi.advanceTimersByTime(1);
     expect(gift.gift()).not.toBeNull();
   });
