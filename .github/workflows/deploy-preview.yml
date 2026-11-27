@@ -15,7 +15,7 @@ concurrency:
 jobs:
   deploy:
     if: github.ref == 'refs/heads/feature/calendar-upgrades'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -41,8 +41,10 @@ jobs:
         run: |
           set -eu
           test -s dist/inselkalender/browser/index.html
-          sudo apt-get update
-          sudo apt-get install -y lftp
+          if ! command -v lftp >/dev/null 2>&1; then
+            sudo apt-get -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/ubuntu.sources -o Dir::Etc::sourceparts=- -o Acquire::Retries=3 update
+            sudo apt-get -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/ubuntu.sources -o Dir::Etc::sourceparts=- -o Acquire::Retries=3 install -y lftp
+          fi
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           echo "access-5020380091.webspace-host.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINbBMvvDjN4IP04VAZlDH42A+HL25ifeIK9CorAvaMA/" >> ~/.ssh/known_hosts
@@ -62,4 +64,7 @@ jobs:
           bye
           EOF
       - name: Verify published preview
-        run: curl --fail --silent --show-error --retry 3 'https://kklender.philipp-nowotnick.de/preview/calendar-upgrades/' | grep -F 'base href="/preview/calendar-upgrades/"'
+        run: |
+          set -eu
+          curl --fail --silent --show-error --retry 3 "https://kklender.philipp-nowotnick.de/preview/calendar-upgrades/index.html?v=${GITHUB_SHA}" -o /tmp/preview-index.html
+          cmp dist/inselkalender/browser/index.html /tmp/preview-index.html
