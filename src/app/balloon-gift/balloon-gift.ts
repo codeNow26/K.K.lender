@@ -34,7 +34,7 @@ export class BalloonGift implements OnInit, OnDestroy {
   private lastReward = -1;
 
   ngOnInit(): void {
-    this.schedule(5000);
+    this.schedule(20000 + Math.random() * 10000);
   }
 
   ngOnDestroy(): void {
@@ -46,7 +46,7 @@ export class BalloonGift implements OnInit, OnDestroy {
     this.clearTimers();
     this.gift.set(null);
     this.reward.set('');
-    if (!this.document.hidden) this.schedule(5000);
+    if (!this.document.hidden) this.schedule(20000 + Math.random() * 10000);
   }
 
   catchGift(): void {
@@ -71,7 +71,7 @@ export class BalloonGift implements OnInit, OnDestroy {
   }
 
   private scheduleNext(): void {
-    this.schedule(35000 + Math.random() * 30000);
+    this.schedule(120000);
   }
 
   private schedule(delay: number): void {
