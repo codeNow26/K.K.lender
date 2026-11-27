@@ -10,12 +10,12 @@ const BALLOONS = [
 ] as const;
 
 const SURPRISES = [
-  'Ein Päckchen voller Schmeggels!',
-  'Ein kleiner Kloanst für deine Tasche.',
-  'Du hast 100 Gugugigi-Sternis gefunden!',
-  'Ein Gutschein für eine extra lange Umarmung.',
-  'Eine Portion gute Laune für heute.',
-  'Ein Stück Inselglück für euch zwei.',
+  "Du hast 100 Gugugigi-Sternis gefunden!",
+  "Du hast einen originalen Phjelepp-Furz im Einmachglas gefunden.",
+  "Lilly hat dein Geschenk geöffnet. Es tut ihr nicht leid.",
+  "Du hast einen seltenen Kloanst gefunden. Er macht >.<",
+  "Du hast einen Liebesbrief gefunden. Darin steht nur: I lieb di, du Kloanst.",
+  "Du hast eine Portion Liebi mit Spuren von Schröds Katzenhaaren enthalten.",
 ] as const;
 
 @Component({
@@ -55,7 +55,9 @@ export class BalloonGift implements OnInit, OnDestroy {
     clearTimeout(this.flightTimer);
     this.audio.playDayClick();
     const offset = 1 + Math.floor(Math.random() * (SURPRISES.length - 1));
-    this.lastReward = (this.lastReward + offset) % SURPRISES.length;
+    this.lastReward = this.lastReward < 0
+      ? Math.floor(Math.random() * SURPRISES.length)
+      : (this.lastReward + offset) % SURPRISES.length;
     this.reward.set(SURPRISES[this.lastReward]);
     this.rewardTimer = setTimeout(() => this.reward.set(''), 5500);
     this.scheduleNext();
