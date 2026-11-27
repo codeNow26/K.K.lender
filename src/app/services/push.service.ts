@@ -4,7 +4,7 @@ import { SupabaseService } from './supabase.service';
 @Injectable({ providedIn: 'root' })
 export class PushService {
   private readonly supabase = inject(SupabaseService);
-  readonly supported = typeof window !== 'undefined' && window.isSecureContext &&
+  readonly supported = false && typeof window !== 'undefined' && window.isSecureContext &&
     'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
   readonly enabled = signal(false);
   readonly busy = signal(false);
